@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <form method="POST">
+        {% csrf_token %}
+
+        <h3>Section 1: Work Details</h3>
+        <div class="mb-3">
+            <label for="location" class="form-label">1. Location Of Work</label>
+            {{ form.location }}
+        </div>
+        <div class="mb-3">
+            <label for="workDescription" class="form-label">2. Description Of Work</label>
+            {{ form.work_description }}
+        </div>
+        <div class="mb-3">
+            <label for="equipment" class="form-label">3. Equipment/Tools/Materials To Be Used</label>
+            {{ form.equipment_tools_materials }}
+        </div>
+        <div class="mb-3">
+            <label for="riskAssessment" class="form-label">4. Risk Assessment Done</label>
+            {{ form.risk_assessment_done }}
+        </div>
+
+        <!-- Section 2: Work Duration And Personnel -->
+        <h3>Section 2: Work Duration And Personnel</h3>
+        <div class="mb-3">
+            <label for="startDate" class="form-label">5. Start Date/Time</label>
+            {{ form.start_datetime }}
+        </div>
+        <div class="mb-3">
+            <label for="duration" class="form-label">6. Duration</label>
+            {{ form.duration }}
+        </div>
+        <div class="mb-3">
+            <label for="days" class="form-label">7. Days</label>
+            {{ form.days }}
+        </div>
+        <div class="mb-3">
+            <label for="workers" class="form-label">8. Numbers Of Workers</label>
+            {{ form.workers_count }}
+        </div>
+        <div class="mb-3">
+            <label for="department" class="form-label">9. Department Responsible For Work</label>
+            {{ form.department }}
+        </div>
+        <div class="mb-3">
+            <label for="contractor" class="form-label">10. Contractor</label>
+            {{ form.contractor }}
+        </div>
+        <div class="mb-3">
+            <label for="supervisor" class="form-label">11. Name Of Contractor Supervisor</label>
+            {{ form.contractor_supervisor }}
+        </div>
+        
+        <!-- Section 3: Safety Precaution -->
+        <h3>Section 3: Safety Precaution</h3>
+        <div class="mb-3">
+            <label class="form-label">12. Work Place</label>
+            {{ form.work_place }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">13. Work Location be Isolated By</label>
+            {{ form.work_location_isolation }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">14. Personal Safety Equipment</label>
+            {{ form.personal_safety }}
+        </div>
+        <div class="mb-3">
+            <label for="supervisor" class="form-label">15. Additional Precautions</label>
+            {{ form.additional_precautions }}
+        </div>
+
+        <!-- Section 4: Permit Applicant -->
+        <h3>Section 4: Permit Applicant</h3>
+        <div class="mb-3">
+            <label for="supervisorName" class="form-label">16. The Work May Proceed Under The Supervisor of</label>
+            {{ form.supervisor_name }}
+        </div>
+        <div class="mb-3">
+            <label for="applicantName" class="form-label">17. Permit Applicant Name</label>
+            {{ form.applicant_name }}
+        </div>
+        <div class="mb-3">
+            <label for="applicantDate" class="form-label">18. Date</label>
+            {{ form.applicant_date }}
+        </div>
+        <div class="mb-3">
+            <label for="applicantSign" class="form-label">19. Sign</label>
+            {{ form.applicant_sign }}
+        </div>
+        <!-- Section 5: Facility Manager -->
+        <h3>Section 5: Facility Manager</h3>
+        <div class="mb-3">
+            <label for="facilityManager" class="form-label">20. Facility Manager Name</label>
+            {{ form.facility_manager_name }}
+        </div>
+        <div class="mb-3">
+            <label for="facilityDate" class="form-label">21. Date</label>
+            {{ form.facility_manager_date }}
+        </div>
+        <div class="mb-3">
+            <label for="facilitySign" class="form-label">22. Sign</label>
+            {{ form.facility_manager_sign }}
+        </div>
+        <div class="mb-3">
+            <label for="certificates" class="form-label">23. Certificates Required For This Report</label>
+            {{ form.certificates_required }}
+        </div>
+         <!-- Section 6: Validity and Renewal -->
+         <h3>Section 6: Validity And Renewal Of Permit</h3>
+         <div class="mb-3">
+             <label for="validFrom" class="form-label">24. Date Valid From</label>
+             {{ form.valid_from }}
+         </div>
+         <div class="mb-3">
+             <label for="validTo" class="form-label">25. Date Valid To</label>
+             {{ form.valid_to }}
+         </div>
+         <div class="mb-3">
+             <label for="initials" class="form-label">26. Initials</label>
+             {{ form.initials }}
+         </div>
+
+         <!-- Section 7: Contractor -->
+         <h3>Section 7: Contractor</h3>
+         <div class="mb-3">
+             <label for="contractorName" class="form-label">27. Contractor Name</label>
+             {{ form.contractor_name }}
+         </div>
+         <div class="mb-3">
+             <label for="contractorDate" class="form-label">28. Date</label>
+             {{ form.contractor_date }}
+         </div>
+         <div class="mb-3">
+             <label for="contractorSign" class="form-label">29. Sign</label>
+             {{ form.contractor_sign }}
+         </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+
+{% endblock content %}

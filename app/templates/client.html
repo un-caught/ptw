@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row pt-3">
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Pending PTW</h5>
+                <p class="card-text">{{ pend_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Approved PTW</h5>
+                <p class="card-text">{{ approved_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Open NHIR</h5>
+                <p class="card-text">{{ open_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Closed NHIR</h5>
+                <p class="card-text">{{ closed_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="my-4" data-aos="fade-up" data-aos-delay="500">
+    <h3>Recent Activities</h3>
+    <ul class="list-group">
+        <li class="list-group-item">User John Doe logged in.</li>
+        <li class="list-group-item">New signup from Jane Smith.</li>
+        <li class="list-group-item">System update completed.</li>
+        <li class="list-group-item">User David signed out.</li>
+    </ul>
+</div>
+
+</div>
+</div>
+{% endblock content %}

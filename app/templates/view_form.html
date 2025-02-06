@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4 mt-2 pt-3">PTW Form Submission Details</h1>
+
+    <!-- Submission Details Card -->
+    <!-- Submission Details Table -->
+<div class="container shadow-sm bg-white" style="border-radius: 0.375rem;">
+    <div class="card-body">
+        <h4 class="pt-2"><strong>Form ID:  {{ submission.id }} </strong></h4>
+        <h5><strong>Date Submitted:</strong> {{ submission.date_submitted }}</h5>
+        <h5><strong>User:</strong> {{ submission.user.get_full_name }}</h5>
+        <h5><strong>Location:</strong> {{ submission.location }}</h5>
+        <h5><strong>Status:</strong> {{ submission.status }}</h5>
+        <br><br>
+
+        <h4><strong>Details:</strong></h4>
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <th>Work Description</th>
+                    <td>{{ submission.work_description }}</td>
+                </tr>
+                <tr>
+                    <th>Equipment/Tools/Materials To Be Used</th>
+                    <td>{{ submission.equipment_tools_materials }}</td>
+                </tr>
+                <tr>
+                    <th>Risk Assessment</th>
+                    <td>{{ submission.risk_assessment_done }}</td>
+                </tr>
+                {% if submission.additional_field %}
+                <tr>
+                    <th>Additional Field</th>
+                    <td>{{ submission.additional_field }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>Start Date/Time</th>
+                    <td>{{ submission.start_datetime }}</td>
+                </tr>
+                <tr>
+                    <th>Duration</th>
+                    <td>{{ submission.duration }}</td>
+                </tr>
+                <tr>
+                    <th>Days</th>
+                    <td>{{ submission.days }}</td>
+                </tr>
+                <tr>
+                    <th>Numbers Of Workers</th>
+                    <td>{{ submission.workers_count }}</td>
+                </tr>
+                <tr>
+                    <th>Department Responsible For Work</th>
+                    <td>{{ submission.department }}</td>
+                </tr>
+                <tr>
+                    <th>Contractor</th>
+                    <td>{{ submission.contractor }}</td>
+                </tr>
+                <tr>
+                    <th>Name Of Contractor Supervisor</th>
+                    <td>{{ submission.contractor_supervisor }}</td>
+                </tr>
+                <tr>
+                    <th>Work Place</th>
+                    <td>
+                        <ul>
+                            {%  for item in submission.work_place.all %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Work Location be Isolated By</th>
+                    <td>
+                        <ul>
+                            {%  for item in submission.work_location_isolation.all %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Personal Safety Equipment</th>
+                    <td>
+                        <ul>
+                            {%  for item in submission.personal_safety.all %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% if submission.additional_precautions %}
+                <tr>
+                    <th>Additional Precautions</th>
+                    <td>{{ submission.additional_precautions }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>The Work May Proceed Under The Supervisor of</th>
+                    <td>{{ submission.supervisor_name }}</td>
+                </tr>
+                <tr>
+                    <th>Permit Applicant Name</th>
+                    <td>{{ submission.applicant_name }}</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>{{ submission.applicant_date }}</td>
+                </tr>
+                <tr>
+                    <th>Applicant Signature</th>
+                    <td>{{ submission.applicant_sign }}</td>
+                </tr>
+                <tr>
+                    <th>Facility Manager Name</th>
+                    <td>{{ submission.facility_manager_name }}</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>{{ submission.facility_manager_date }}</td>
+                </tr>
+                <tr>
+                    <th>Facility Manager Signature</th>
+                    <td>{{ submission.facility_manager_sign }}</td>
+                </tr>
+                <tr>
+                    <th>Certificates Required For This Report</th>
+                    <td>{{ submission.certificates_required }}</td>
+                </tr>
+                <tr>
+                    <th>Date Valid From</th>
+                    <td>{{ submission.valid_from }}</td>
+                </tr>
+                <tr>
+                    <th>Date Valid To</th>
+                    <td>{{ submission.valid_to }}</td>
+                </tr>
+                <tr>
+                    <th>Initials</th>
+                    <td>{{ submission.initials }}</td>
+                </tr>
+                <tr>
+                    <th>Contractor Name</th>
+                    <td>{{ submission.contractor_name }}</td>
+                </tr>
+                <tr>
+                    <th>Date</th>
+                    <td>{{ submission.contractor_date }}</td>
+                </tr>
+                <tr>
+                    <th>Contractor Signature</th>
+                    <td>{{ submission.contractor_sign }}</td>
+                </tr>
+                <tr>
+                    <th> HSEQ Name</th>
+                    <td>{{ submission.hseq_name }}</td>
+                </tr>
+                <tr>
+                    <th> HSEQ Date</th>
+                    <td>{{ submission.hseq_date }}</td>
+                </tr>
+                <tr>
+                    <th> HSEQ Signature</th>
+                    <td>{{ submission.hseq_sign }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="mt-4">
+            <a href="{% url 'form_list' %}" class="btn btn-secondary">Back to Report</a>
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock content %}

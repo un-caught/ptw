@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">NHIR Form Submission Details</h1>
+
+    <!-- Submission Details Card -->
+    <!-- Submission Details Table -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h4><strong>Form ID:  {{ submission.id }} </strong></h4>
+        <h5><strong>Date Submitted:</strong> {{ submission.date_submitted }}</h5>
+        {% if is_supervisor %}
+        <h5><strong>User:</strong> {{ submission.user.username }}</h5>
+        {% endif %}
+        <h5><strong>Location:</strong> {{ submission.location }}</h5>
+        <h5><strong>Status:</strong> {{ submission.status }}</h5>
+        <br><br>
+
+        <h4><strong>Details:</strong></h4>
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <th>Date</th>
+                    <td>{{ submission.date }}</td>
+                </tr>
+                <tr>
+                    <th>Hazard Identification</th>
+                    <td>
+                        <ul>
+                            {%  for item in submission.hazard.all %}
+                                <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Risk Type</th>
+                    <td>{{ submission.risk_type }}</td>
+                </tr>
+                <tr>
+                    <th>RAM Rating</th>
+                    <td>{{ submission.ram_rating }}</td>
+                </tr>
+                <tr>
+                    <th>Description Of Observations</th>
+                    <td>{{ submission.observation }}</td>
+                </tr>
+                <tr>
+                    <th>Immediate Action Taken</th>
+                    <td>{{ submission.action_taken }}</td>
+                </tr>
+                <tr>
+                    <th>Futher Action To Prevent Reccurence</th>
+                    <td>{{ submission.preventive_action }}</td>
+                </tr>
+                <tr>
+                    <th>Responsible Action Party</th>
+                    <td>{{ submission.responsible_party }}</td>
+                </tr>
+                <tr>
+                    <th>Target Date/Time</th>
+                    <td>{{ submission.target_date }}</td>
+                </tr>
+                <tr>
+                    <th>Observed By</th>
+                    <td>{{ submission.observed_by }}</td>
+                </tr>
+                <tr>
+                    <th>Department</th>
+                    <td>{{ submission.dept }}</td>
+                </tr>
+                <tr>
+                    <th>Date/Time Observed</th>
+                    <td>{{ submission.observed_date }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="mt-4">
+            <a href="{% url 'nhis_list' %}" class="btn btn-secondary">Back to Report</a>
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock content %}

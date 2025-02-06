@@ -1,0 +1,108 @@
+def export_to_csv(report_data):
+    # Prepare the CSV response
+    print(report_data)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="form_submission_report.csv"'
+
+    writer = csv.writer(response)
+    # Write the header row
+    writer.writerow(['Form Type', 'Form ID', 'Date Submitted', 'User', 'Location', 'Status'])
+
+    # Write the data rows (filtered and appended data)
+    for submission in report_data:
+        writer.writerow([
+            submission['form_type'],
+            submission['form_id'],
+            submission['date_submitted'],
+            submission['user'],
+            submission['location'],
+            submission['status']
+        ])
+
+    if not report_data:
+        # Handle the case where there is no data to export
+        return HttpResponse("No data available to export.", status=400)
+
+    return response
+
+
+
+
+
+
+
+def export_to_excel(report_data):
+    # Create a new Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Form Submissions"
+
+    # Define headers for the Excel file
+    headers = ['Form Type', 'Form ID', 'Date Submitted', 'User', 'Location', 'Status']
+    ws.append(headers)
+
+    # Write the data rows to the Excel sheet
+    for submission in report_data:
+        ws.append([
+            submission['form_type'],
+            submission['form_id'],
+            submission['date_submitted'],
+            submission['user'],
+            submission['location'],
+            submission['status']
+        ])
+
+    # Set column width for better visibility
+    for col_num in range(1, len(headers) + 1):
+        column = get_column_letter(col_num)
+        max_length = 0
+        for row in ws.iter_rows(min_col=col_num, max_col=col_num):
+            for cell in row:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except:
+                    pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[column].width = adjusted_width
+
+    # Create the response object to download the Excel file
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="form_submission_report.xlsx"'
+
+    # Save the workbook to the response object
+    wb.save(response)
+    return response
+
+
+
+
+    <!-- Export button -->
+    <a href="?startDate={{ start_date }}&endDate={{ end_date }}&export=true" class="btn btn-success mb-3">
+        Export to CSV
+    </a>
+
+
+
+
+button lineup view, approve, disapprove
+
+
+report lab
+
+
+
+<!-- Section 8: HSEQ -->
+         <h3>Approval Section</h3>
+         <div class="mb-3">
+             <label for="hseqName" class="form-label">30. HSEQ Name</label>
+             {{ form.hseq_name }}
+         </div>
+         <div class="mb-3">
+             <label for="hseqDate" class="form-label">31. Date</label>
+             {{ form.hseq_date }}
+         </div>
+         <div class="mb-3">
+             <label for="hseqSign" class="form-label">33. Sign</label>
+             {{ form.hseq_sign }}
+         </div>

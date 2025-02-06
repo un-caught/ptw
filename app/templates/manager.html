@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row pt-3">
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Approved PTW</h5>
+                <p class="card-text">{{ approved_ptw }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Pending PTW</h5>
+                <p class="card-text">{{ pending_ptw_manager }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Closed NHIR</h5>
+                <p class="card-text">{{ closed_nhis }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Pending NHIR</h5>
+                <p class="card-text">{{ pending_nhis_manager }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div data-aos="fade-up" data-aos-delay="400">
+    <img src="data:image/png;base64,{{ combined_chart }}" alt="Combined Chart" style="max-width: 100%; height: auto;">
+</div>
+
+
+{% endblock content %}
