@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
+{% block title %}Edit PTW{% endblock title %}
 
 {% block content %}
 <div class="container-fluid">
     <h2 class="my-4" data-aos="fade-up">Edit Form Submission</h2>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
     
         <h3>Section 1: Work Details</h3>
@@ -22,6 +23,10 @@
         <div class="mb-3">
             <label for="riskAssessment" class="form-label">4. Risk Assessment Done</label>
             {{ form.risk_assessment_done }}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.attachment.id_for_label }}" class="form-label">Prove of Risk Assessment Carried Out (Optional)</label>
+            {{ form.attachment }}
         </div>
 
         <!-- Section 2: Work Duration And Personnel -->
@@ -110,39 +115,42 @@
             <label for="certificates" class="form-label">23. Certificates Required For This Report</label>
             {{ form.certificates_required }}
         </div>
-         <!-- Section 6: Validity and Renewal -->
-         <h3>Section 6: Validity And Renewal Of Permit</h3>
-         <div class="mb-3">
-             <label for="validFrom" class="form-label">24. Date Valid From</label>
-             {{ form.valid_from }}
-         </div>
-         <div class="mb-3">
-             <label for="validTo" class="form-label">25. Date Valid To</label>
-             {{ form.valid_to }}
-         </div>
-         <div class="mb-3">
-             <label for="initials" class="form-label">26. Initials</label>
-             {{ form.initials }}
-         </div>
 
-         <!-- Section 7: Contractor -->
-         <h3>Section 7: Contractor</h3>
+         <!-- Section 6: Contractor -->
+         <h3>Section 6: Contractor</h3>
          <div class="mb-3">
-             <label for="contractorName" class="form-label">27. Contractor Name</label>
+             <label for="contractorName" class="form-label">24. Contractor Name</label>
              {{ form.contractor_name }}
          </div>
          <div class="mb-3">
-             <label for="contractorDate" class="form-label">28. Date</label>
+             <label for="contractorDate" class="form-label">25. Date</label>
              {{ form.contractor_date }}
          </div>
          <div class="mb-3">
-             <label for="contractorSign" class="form-label">29. Sign</label>
+             <label for="contractorSign" class="form-label">26. Sign</label>
              {{ form.contractor_sign }}
          </div>
+         <div class="mb-3">
+            <label for="{{ form.project_attachment.id_for_label }}" class="form-label">Attachment For Projects Work Done </label>
+            {{ form.project_attachment }}
+        </div>
          
-         <!-- Section 8: HSEQ -->
-         <h3>Section 8: HSEQ</h3>
+         <!-- Section 7: HSEQ -->
+         <h3>Section 7: HSEQ</h3>
          <h4>Please leave the section empty if you are not in HSEQ Deptment</h4>
+            <h3>Validity And Renewal Of Permit</h3>
+            <div class="mb-3">
+                <label for="validFrom" class="form-label">27. Date Valid From</label>
+                {{ form.valid_from }}
+            </div>
+            <div class="mb-3">
+                <label for="validTo" class="form-label">28. Date Valid To</label>
+                {{ form.valid_to }}
+            </div>
+            <div class="mb-3">
+                <label for="initials" class="form-label">29. Initials</label>
+                {{ form.initials }}
+            </div>
          <div class="mb-3">
              <label for="hseqName" class="form-label">30. HSEQ Name</label>
              {{ form.hseq_name }}
@@ -157,19 +165,19 @@
          </div>
 
          
-         <!-- Section 8: HSEQ -->
-         <h3>Section 9: Manager</h3>
+         <!-- Section 8: Manager -->
+         <h3>Section 8: Manager</h3>
          <h4>Please leave the section empty for the Manger</h4>
          <div class="mb-3">
-             <label for="hseqName" class="form-label">30. Manager Name</label>
+             <label for="hseqName" class="form-label">34. Manager Name</label>
              {{ form.manager_name }}
          </div>
          <div class="mb-3">
-             <label for="hseqDate" class="form-label">31. Date</label>
+             <label for="hseqDate" class="form-label">35. Date</label>
              {{ form.manager_date }}
          </div>
          <div class="mb-3">
-             <label for="hseqSign" class="form-label">33. Sign</label>
+             <label for="hseqSign" class="form-label">36. Sign</label>
              {{ form.manager_sign }}
          </div>
 

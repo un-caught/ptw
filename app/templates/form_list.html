@@ -1,10 +1,11 @@
 {% extends 'base.html' %}
+{% block title %}PTW List{% endblock title %}
 
 {% block content %}
 
 <div class="container shadow-sm bg-white mt-6" style="border-radius: 0.375rem;">
     <div class="card-body">
-        <h1 class="text-center mb-4 mt-2">Permit to Work (PTW) Forms</h1>
+        <h1 class="text-center mb-4 mt-2 pt-2">Permit to Work (PTW) Forms</h1>
         {% if is_vendor %}
         <a href="{% url 'create_form' %}" class="btn btn-primary mb-3" >Create New PTW Form</a>
         {% endif %}

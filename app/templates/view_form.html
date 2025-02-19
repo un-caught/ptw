@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}View PTW{% endblock title %}
 
 {% block content %}
 
@@ -31,6 +32,22 @@
                     <th>Risk Assessment</th>
                     <td>{{ submission.risk_assessment_done }}</td>
                 </tr>
+                <tr>
+                    <th>Attachments</th>
+                    <td>
+                        {% if submission.attachment %}
+                            {% if attachment_ext == '.jpg' or attachment_ext == '.png' or attachment_ext == '.gif' %}
+                                <img src="{{ submission.attachment.url }}" alt="Risk Attachment" width="200">
+                            {% else %}
+                                <a href="{{ submission.attachment.url }}" target="_blank">Download Attachment</a>
+                            {% endif %}
+                        {% else %}
+                            No attachment
+                        {% endif %}
+                    </td>
+                </tr>
+                
+
                 {% if submission.additional_field %}
                 <tr>
                     <th>Additional Field</th>
@@ -132,6 +149,20 @@
                 <tr>
                     <th>Certificates Required For This Report</th>
                     <td>{{ submission.certificates_required }}</td>
+                </tr>
+                <tr>
+                    <th>Attachments</th>
+                    <td>
+                        {% if submission.project_attachment %}
+                            {% if project_attachment_ext == '.jpg' or project_attachment_ext == '.png' or project_attachment_ext == '.gif' %}
+                                <img src="{{ submission.project_attachment.url }}" alt="Project Attachment" width="200">
+                            {% else %}
+                                <a href="{{ submission.project_attachment.url }}" target="_blank">Download Attachment</a>
+                            {% endif %}
+                        {% else %}
+                            No attachment
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
                     <th>Date Valid From</th>

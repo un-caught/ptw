@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}NHIR Form{% endblock title %}
 
 {% block content %}
 <div class="container mt-5">
@@ -52,9 +53,12 @@
        
 
          <h3>Section 6: Responsible Party And Target</h3>
-         <div class="mb-3">
+        <div class="mb-3">
             <label for="ResponsibleParty" class="form-label">9. Responsible Action Party</label>
-            {{ form.responsible_party }}
+            <label class="form-check ms-4">
+                {{ form.responsible_party }}
+                <span class="form-check-label">{{ form.responsible_party.choice_label }}</span>
+            </label>
         </div>
         <div class="mb-3">
             <label for="TargetDate" class="form-label">10. Target Date/Time</label>

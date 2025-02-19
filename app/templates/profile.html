@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="profile-container">
+        <div class="profile-header">
+            <!-- Profile Image -->
+            <img src="{{ profile.profile_picture.url }}" alt="Profile Image" class="profile-img">
+            
+            <!-- User Info -->
+            <div>
+                <h2>{{ profile.user.username }}</h2>
+                <p class="text-muted">Email: {{ profile.user.email }}</p>
+                <p class="text-muted">Joined: {{ profile.user.date_joined }}</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Profile Details -->
+        <div class="profile-details">
+            <h4>Contact Information</h4>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-phone-alt"></i> Phone: {{ profile.phone|default:"Not provided" }}</li>
+                <li><i class="fas fa-map-marker-alt"></i> Address: {{ profile.address|default:"Not provided" }}</li>
+            </ul>
+
+            <!-- Edit Profile Button -->
+            <a href="{% url 'edit_profile' %}" class="btn btn-primary">Edit Profile</a>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

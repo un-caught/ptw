@@ -1,12 +1,30 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
-from .models import PTWForm, SafetyPrecaution, WorkLocationIsolation, PersonalSafety, NHISForm, Hazards
+from .models import PTWForm, SafetyPrecaution, WorkLocationIsolation, PersonalSafety, NHISForm, Hazards, Member
+
+from django.forms.widgets import ClearableFileInput
+
+
+class ProfileEditForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = ['email', 'phone', 'address', 'profile_picture']
+
+class MultiFileInput(ClearableFileInput):
+    allow_multiple_selected = True
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs)
+        if attrs is None:
+            attrs = {}
+        attrs.update({'multiple': 'multiple'})
+        self.attrs = attrs
 
 
 class CreateUserForm(UserCreationForm):
     group_choices = forms.ChoiceField(
-        choices=[('staff', 'Staff'), ('vendor', 'Vendor')],
+        choices=[('staff', 'Staff'), ('vendor', 'Vendor Supervisor')],
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     class Meta:
@@ -24,7 +42,7 @@ class CreateUserForm(UserCreationForm):
 class PTWSubmissionForm(forms.ModelForm):
     class Meta:
         model = PTWForm
-        fields = ['location', 'work_description', 'equipment_tools_materials', 'risk_assessment_done',
+        fields = ['location', 'work_description', 'equipment_tools_materials', 'risk_assessment_done','attachment','project_attachment',
                   'start_datetime', 'duration', 'days', 'workers_count', 'department','contractor','contractor_supervisor', 
                   'work_place', 'work_location_isolation', 'personal_safety', 'additional_precautions', 'supervisor_name',
                   'applicant_name', 'applicant_date', 'applicant_sign', 'facility_manager_name', 'facility_manager_date', 'facility_manager_sign', 'certificates_required',
@@ -32,10 +50,16 @@ class PTWSubmissionForm(forms.ModelForm):
 
 
     #Work Details
-    location = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    location = forms.ChoiceField(choices=[
+        ('HQ_Lekki', 'HQ - Lekki'),
+        ('CGS_Ikorodu', 'CGS - Ikorodu'),
+        ('LNG_PH', 'LNG - PH'),
+        ('LFZ_Ibeju', 'LFZ - Ibeju'),
+    ], widget=forms.Select(attrs={'class': 'form-select'}))
     work_description = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     equipment_tools_materials = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     risk_assessment_done = forms.ChoiceField(choices=[('yes', 'Yes'), ('no', 'No')], widget=forms.Select(attrs={'class': 'form-select'}))
+    # attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=True)
 
     #Work Duration and Personnel
     start_datetime = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
@@ -77,17 +101,25 @@ class PTWSubmissionForm(forms.ModelForm):
     facility_manager_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
     facility_manager_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
     facility_manager_sign = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    certificates_required = forms.ChoiceField(choices=[('CERTIFICATE_FOR_EXCAVATION_WORK', 'CERTIFICATE FOR EXCAVATION WORK'), ('CERTIFICATE_FOR_HOT_WORK', 'CERTIFICATE FOR HOT WORK'), ('CERTIFICATE_FOR_ELECTRICAL_WORK', 'CERTIFICATE FOR ELECTRICAL WORK'), ('GAS_TEST_FORM', 'GAS TEST FORM'), ('CERTIFICATE_FOR_CONFINED_SPACES', 'CERTIFICATE FOR CONFINED SPACES')], widget=forms.Select(attrs={'class': 'form-select'}))
+    certificates_required = forms.ChoiceField(choices=[
+        ('CERTIFICATE_FOR_EXCAVATION_WORK', 'CERTIFICATE FOR EXCAVATION WORK'), 
+        ('CERTIFICATE_FOR_HOT_WORK', 'CERTIFICATE FOR HOT WORK'), 
+        ('CERTIFICATE_FOR_ELECTRICAL_WORK', 'CERTIFICATE FOR ELECTRICAL WORK'), 
+        ('GAS_TEST_FORM', 'GAS TEST FORM'), 
+        ('CERTIFICATE_FOR_CONFINED_SPACES', 'CERTIFICATE FOR CONFINED SPACES'),
+        ('NOT_APPLICABLE', 'NOT APPLICABLE'),
+        ], widget=forms.Select(attrs={'class': 'form-select'}))
 
     #Validity And Renewal Of Permit
-    valid_from = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
-    valid_to = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
-    initials = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    valid_from = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}), required=False)
+    valid_to = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}), required=False)
+    initials = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
 
     #Contractor
     contractor_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
     contractor_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
     contractor_sign = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    # project_attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=True)
 
     #HSEQ
     hseq_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
@@ -109,7 +141,12 @@ class NHISSubmissionForm(forms.ModelForm):
     
 
     #General Information
-    location = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    location = forms.ChoiceField(choices=[
+        ('HQ_Lekki', 'HQ - Lekki'),
+        ('CGS_Ikorodu', 'CGS - Ikorodu'),
+        ('LNG_PH', 'LNG - PH'),
+        ('LFZ_Ibeju', 'LFZ - Ibeju'),
+    ], widget=forms.Select(attrs={'class': 'form-select'}))
     date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
 
     #Hazard Identification
@@ -122,6 +159,8 @@ class NHISSubmissionForm(forms.ModelForm):
     risk_type = forms.ChoiceField(choices=[('UA', 'UA (Unsafe Act)'),
         ('UC', 'UC (Unsafe Condition)'),
         ('NM', 'NM (Near Miss)'),
+        ('ACD', 'ACD (Accident)'),
+        ('NC', 'NC (Non Conformity)'),
         ], widget=forms.Select(attrs={'class': 'form-select'}))
 
     ram_rating = forms.ChoiceField(choices=[('High', 'High'),
@@ -139,10 +178,22 @@ class NHISSubmissionForm(forms.ModelForm):
     preventive_action = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), required=False)
 
     #Responsible Party And Target
-    responsible_party = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    responsible_party = forms.ChoiceField(choices=[('HSEQ', 'HSEQ'),], widget=forms.RadioSelect(attrs={'class': 'form-check-input'}), required=True,)
     target_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
 
     #Observed By
     observed_by = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    dept = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    dept = forms.ChoiceField(choices=[
+        ('Admin', 'Admin'),
+        ('BDS', 'BDS'),
+        ('DC', 'DC'),
+        ('ER', 'ER'),
+        ('FVC', 'FVC'),
+        ('HR', 'HR'),
+        ('HSE', 'HSE'),
+        ('IAC', 'IAC'),
+        ('IT', 'IT'),
+        ('LRC', 'LRC'),
+        ('TS', 'TS'),
+    ], widget=forms.Select(attrs={'class': 'form-select'}))
     observed_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))

@@ -6,9 +6,13 @@ class Member(models.Model):
     user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=200, null=True)
     email = models.CharField(max_length=200, null=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
 
     def customer(self):
         return self.name
+    
 
 class SafetyPrecaution(models.Model):
     name = models.CharField(max_length=255)
@@ -36,10 +40,18 @@ class PTWForm(models.Model):
     # Section 1: Work Details
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     date_submitted = models.DateTimeField(auto_now_add=True, null=True)
-    location = models.CharField(max_length=100)
+    location = models.CharField(max_length=255, choices=[
+        ('HQ_Lekki', 'HQ_Lekki'),
+        ('CGS_Ikorodu', 'CGS_Ikorodu'),
+        ('LNG_PH', 'LNG_PH'),
+        ('LFZ_Ibeju', 'LFZ_Ibeju'),
+    ], blank=True, null=True)
     work_description = models.TextField(null=True)
     equipment_tools_materials = models.TextField(null=True)
     risk_assessment_done = models.CharField(max_length=3, choices=[('yes', 'Yes'), ('no', 'No')], null=True)
+    attachment = models.FileField(upload_to='attachments/', null=True, blank=True)
+    project_attachment = models.FileField(upload_to='attachments/', null=True, blank=True)
+
 
     # Section 2: Work Duration and Personnel
     start_datetime = models.DateTimeField(null=True)
@@ -72,6 +84,7 @@ class PTWForm(models.Model):
         ('CERTIFICATE_FOR_ELECTRICAL_WORK', 'CERTIFICATE_FOR_ELECTRICAL_WORK'),
         ('GAS_TEST_FORM', 'GAS_TEST_FORM'),
         ('CERTIFICATE_FOR_CONFINED_SPACES', 'CERTIFICATE_FOR_CONFINED_SPACES'),
+        ('NOT_APPLICABLE', 'NOT_APPLICABLE'),
     ], blank=True, null=True)
 
     # Section 6: Validity and Renewal
@@ -116,7 +129,12 @@ class NHISForm(models.Model):
     # Section 1: General Information
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     date_submitted = models.DateTimeField(auto_now_add=True, null=True)
-    location = models.CharField(max_length=100)
+    location = models.CharField(max_length=50, choices=[
+        ('HQ_Lekki', 'HQ_Lekki'),
+        ('CGS_Ikorodu', 'CGS_Ikorodu'),
+        ('LNG_PH', 'LNG_PH'),
+        ('LFZ_Ibeju', 'LFZ_Ibeju'),
+    ], blank=True, null=True)
     date = models.DateField(null=True)
     question = models.CharField(max_length=7, choices=[('option1', 'Option 1'), ('option2', 'Option 2')], null=True)
    
@@ -126,6 +144,8 @@ class NHISForm(models.Model):
         ('UA', 'UA (Unsafe Act)'),
         ('UC', 'UC (Unsafe Condition)'),
         ('NM', 'NM (Near Miss)'),
+        ('ACD', 'ACD (Accident)'),
+        ('NC', 'NC (Non-Conformity)'),
     ], blank=True, null=True)
     ram_rating = models.CharField(max_length=255, choices=[
         ('High', 'High'),
@@ -143,12 +163,24 @@ class NHISForm(models.Model):
     preventive_action = models.TextField(blank=True)
 
     # Section 6: Responsible Party And Target
-    responsible_party = models.CharField(max_length=255, null=True)
+    responsible_party = models.CharField(max_length=7, choices=[('HSEQ', 'HSEQ')], default='HSEQ', null=True)
     target_date = models.DateField(null=True)
 
     # Section 7: Observed By
     observed_by = models.CharField(max_length=255, null=True)
-    dept = models.CharField(max_length=255, null=True)
+    dept = models.CharField(max_length=255, choices=[
+        ('Admin', 'Admin'),
+        ('BDS', 'BDS'),
+        ('DC', 'DC'),
+        ('ER', 'ER'),
+        ('FVC', 'FVC'),
+        ('HR', 'HR'),
+        ('HSE', 'HSE'),
+        ('IAC', 'IAC'),
+        ('IT', 'IT'),
+        ('LRC', 'LRC'),
+        ('TS', 'TS'),
+    ], blank=True, null=True)
     observed_date = models.DateField(null=True)
     
     status = models.CharField(

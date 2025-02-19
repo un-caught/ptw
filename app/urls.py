@@ -32,5 +32,8 @@ urlpatterns = [
     path('disapprove_nhis-manager/<int:pk>/', views.disapprove_nhis_manager, name='disapprove_nhis_manager'),
     path('form-report/', views.form_report, name='form_report'),
     path('view_nhis_form/<int:pk>/', views.view_nhis_form, name='view_nhis_form'),
+    # path('generate_pdf/<int:pk>/', views.generate_pdf, name='generate_pdf'),
+    # path('profile/', views.profile, name='profile'),
+    # path('profile/edit/', views.edit_profile, name='edit_profile'),
 
 ]

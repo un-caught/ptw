@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import CreateUserForm, PTWSubmissionForm, NHISSubmissionForm
+from .forms import CreateUserForm, PTWSubmissionForm, NHISSubmissionForm, ProfileEditForm
 from django.contrib.auth.models import Group, User
 from django.contrib.auth import authenticate, login, logout
 from .models import Member, PTWForm, NHISForm
@@ -34,7 +34,6 @@ from django.db.models.functions import TruncMonth
 from matplotlib.ticker import MaxNLocator
 import matplotlib.dates as mdates
 import seaborn as sns
-
 
 # Ensure we use the Agg backend for matplotlib (headless rendering)
 matplotlib.use('Agg')
@@ -97,6 +96,31 @@ def registerPage(request):
 
     context = {'form':form}
     return render(request, 'register.html', context)
+
+
+
+# @login_required
+# def profile(request):
+#     # Retrieve the logged-in user's profile
+#     profile = Member.objects.get_or_create(user=request.user)[0]
+    
+#     # Pass the profile data to the template
+#     return render(request, 'profile.html', {'profile': profile})
+
+
+# @login_required
+# def edit_profile(request):
+#     profile = Member.objects.get(user=request.user)
+    
+#     if request.method == 'POST':
+#         form = ProfileEditForm(request.POST, request.FILES, instance=profile)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('profile')
+#     else:
+#         form = ProfileEditForm(instance=profile)
+    
+#     return render(request, 'edit_profile.html', {'form': form})
 
 
 @login_required(login_url='login')
@@ -315,11 +339,17 @@ def send_mail_to_user_and_supervisors(user_email, subject, message):
 @allowed_users(allowed_roles=['vendor'])
 def create_ptw_form(request):
     if request.method == 'POST':
-        form = PTWSubmissionForm(request.POST)
+        form = PTWSubmissionForm(request.POST, request.FILES)
         if form.is_valid():
             submission = form.save(commit=False)
+            attachment = request.FILES.get('attachment')  # For single file upload
+            project_attachment = request.FILES.get('project_attachment')
+            submission.attachment = attachment
+            submission.project_attachment = project_attachment
             submission.user = request.user
             submission.save()
+
+            form.save_m2m()
 
             # Construct the email message
             subject = "New PTW Form Submission"
@@ -340,6 +370,9 @@ def create_ptw_form(request):
             send_mail_to_user_and_supervisors(submission.user.email, subject, message)
 
             return redirect('form_list')
+
+        else:
+            print(form.errors)
     else:
         form = PTWSubmissionForm()
     return render(request, 'ptw.html', {'form':form})
@@ -381,7 +414,7 @@ def edit_form(request, pk):
     
     if request.method == 'POST':
         print("Form is being submitted")
-        form = PTWSubmissionForm(request.POST, instance=submission)
+        form = PTWSubmissionForm(request.POST, request.FILES, instance=submission)
         if form.is_valid():
             form.save()
 
@@ -428,9 +461,11 @@ def delete_form(request, pk):
 def view_form(request, pk):
     # Get the form submission by its primary key (pk)
     submission = get_object_or_404(PTWForm, pk=pk)
+    attachment_ext = os.path.splitext(submission.attachment.name)[1].lower()
+    project_attachment_ext = os.path.splitext(submission.project_attachment.name)[1].lower()
 
     # Pass the form submission to the template for rendering
-    return render(request, 'view_form.html', {'submission': submission})
+    return render(request, 'view_form.html', {'submission': submission, 'attachment_ext': attachment_ext, 'project_attachment_ext': project_attachment_ext})
 
 
 
@@ -481,14 +516,229 @@ def disapprove_manager(request, pk):
     return redirect('form_list')
 
 
+# def generate_pdf(request, pk):
+#     # Fetch the submission object from the database
+#     submission = get_object_or_404(PTWForm, pk=pk)
+
+#     # Create the HTTP response with content type as PDF
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'inline; filename="submission_details.pdf"'
+
+#     # Create a canvas object to draw on the PDF
+#     pdf = canvas.Canvas(response, pagesize=A4)
+    
+#     # Define the starting position for the text
+#     x = 100
+#     y = 800  # Starting y position (top of the page)
+
+#     # Set font for the PDF
+#     pdf.setFont("Helvetica", 12)
+
+#     # Add Form ID
+#     pdf.drawString(x, y, f"Form ID: {submission.id}")
+#     y -= 20
+    
+#     # Add Date Submitted
+#     pdf.drawString(x, y, f"Date Submitted: {submission.date_submitted}")
+#     y -= 20
+
+#     # Add User (Full Name)
+#     pdf.drawString(x, y, f"User: {submission.user.get_full_name()}")
+#     y -= 20
+
+#     # Add Location
+#     pdf.drawString(x, y, f"Location: {submission.location}")
+#     y -= 20
+
+#     # Add Status
+#     pdf.drawString(x, y, f"Status: {submission.status}")
+#     y -= 40
+
+#     # Add Work Description
+#     pdf.drawString(x, y, f"Work Description: {submission.work_description}")
+#     y -= 20
+
+#     # Add Equipment/Tools/Materials
+#     pdf.drawString(x, y, f"Equipment/Tools/Materials To Be Used: {submission.equipment_tools_materials}")
+#     y -= 20
+
+#     # Add Risk Assessment
+#     pdf.drawString(x, y, f"Risk Assessment: {submission.risk_assessment_done}")
+#     y -= 20
+
+#     # Add Attachments (handling different file types)
+#     if submission.attachment:
+#         pdf.drawString(x, y, f"Attachments: {submission.attachment.url}")
+#     else:
+#         pdf.drawString(x, y, "Attachments: No attachment")
+#     y -= 20
+
+#     # Additional Field (if available)
+#     if submission.additional_field:
+#         pdf.drawString(x, y, f"Additional Field: {submission.additional_field}")
+#         y -= 20
+
+#     # Add Start Date/Time
+#     pdf.drawString(x, y, f"Start Date/Time: {submission.start_datetime}")
+#     y -= 20
+
+#     # Add Duration
+#     pdf.drawString(x, y, f"Duration: {submission.duration}")
+#     y -= 20
+
+#     # Add Days
+#     pdf.drawString(x, y, f"Days: {submission.days}")
+#     y -= 20
+
+#     # Add Number of Workers
+#     pdf.drawString(x, y, f"Number of Workers: {submission.workers_count}")
+#     y -= 20
+
+#     # Add Department Responsible For Work
+#     pdf.drawString(x, y, f"Department Responsible For Work: {submission.department}")
+#     y -= 20
+
+#     # Add Contractor
+#     pdf.drawString(x, y, f"Contractor: {submission.contractor}")
+#     y -= 20
+
+#     # Add Contractor Supervisor
+#     pdf.drawString(x, y, f"Name of Contractor Supervisor: {submission.contractor_supervisor}")
+#     y -= 20
+
+#     # Add Work Place (loop through all items in the related field)
+#     if submission.work_place.all():
+#         pdf.drawString(x, y, "Work Place:")
+#         y -= 20
+#         for item in submission.work_place.all():
+#             pdf.drawString(x + 20, y, f"- {item}")
+#             y -= 20
+#     else:
+#         pdf.drawString(x, y, "Work Place: None")
+#         y -= 20
+
+#     # Add Work Location Isolation (loop through all items in the related field)
+#     if submission.work_location_isolation.all():
+#         pdf.drawString(x, y, "Work Location to be Isolated By:")
+#         y -= 20
+#         for item in submission.work_location_isolation.all():
+#             pdf.drawString(x + 20, y, f"- {item}")
+#             y -= 20
+#     else:
+#         pdf.drawString(x, y, "Work Location to be Isolated By: None")
+#         y -= 20
+
+#     # Add Personal Safety Equipment (loop through all items in the related field)
+#     if submission.personal_safety.all():
+#         pdf.drawString(x, y, "Personal Safety Equipment:")
+#         y -= 20
+#         for item in submission.personal_safety.all():
+#             pdf.drawString(x + 20, y, f"- {item}")
+#             y -= 20
+#     else:
+#         pdf.drawString(x, y, "Personal Safety Equipment: None")
+#         y -= 20
+
+#     # Additional Precautions (if available)
+#     if submission.additional_precautions:
+#         pdf.drawString(x, y, f"Additional Precautions: {submission.additional_precautions}")
+#         y -= 20
+
+#     # Supervisor Name
+#     pdf.drawString(x, y, f"The Work May Proceed Under The Supervisor of: {submission.supervisor_name}")
+#     y -= 20
+
+#     # Permit Applicant Name
+#     pdf.drawString(x, y, f"Permit Applicant Name: {submission.applicant_name}")
+#     y -= 20
+
+#     # Permit Applicant Date
+#     pdf.drawString(x, y, f"Date: {submission.applicant_date}")
+#     y -= 20
+
+#     # Applicant Signature
+#     pdf.drawString(x, y, f"Applicant Signature: {submission.applicant_sign}")
+#     y -= 20
+
+#     # Facility Manager Name
+#     pdf.drawString(x, y, f"Facility Manager Name: {submission.facility_manager_name}")
+#     y -= 20
+
+#     # Facility Manager Date
+#     pdf.drawString(x, y, f"Date: {submission.facility_manager_date}")
+#     y -= 20
+
+#     # Facility Manager Signature
+#     pdf.drawString(x, y, f"Facility Manager Signature: {submission.facility_manager_sign}")
+#     y -= 20
+
+#     # Certificates Required
+#     pdf.drawString(x, y, f"Certificates Required For This Report: {submission.certificates_required}")
+#     y -= 20
+
+#     # Project Attachments (handling file types)
+#     if submission.project_attachment:
+#         pdf.drawString(x, y, f"Project Attachments: {submission.project_attachment.url}")
+#     else:
+#         pdf.drawString(x, y, "Project Attachments: No attachment")
+#     y -= 20
+
+#     # Date Valid From
+#     pdf.drawString(x, y, f"Date Valid From: {submission.valid_from}")
+#     y -= 20
+
+#     # Date Valid To
+#     pdf.drawString(x, y, f"Date Valid To: {submission.valid_to}")
+#     y -= 20
+
+#     # Initials
+#     pdf.drawString(x, y, f"Initials: {submission.initials}")
+#     y -= 20
+
+#     # Contractor Name
+#     pdf.drawString(x, y, f"Contractor Name: {submission.contractor_name}")
+#     y -= 20
+
+#     # Contractor Date
+#     pdf.drawString(x, y, f"Date: {submission.contractor_date}")
+#     y -= 20
+
+#     # Contractor Signature
+#     pdf.drawString(x, y, f"Contractor Signature: {submission.contractor_sign}")
+#     y -= 20
+
+#     # HSEQ Name
+#     pdf.drawString(x, y, f"HSEQ Name: {submission.hseq_name}")
+#     y -= 20
+
+#     # HSEQ Date
+#     pdf.drawString(x, y, f"HSEQ Date: {submission.hseq_date}")
+#     y -= 20
+
+#     # HSEQ Signature
+#     pdf.drawString(x, y, f"HSEQ Signature: {submission.hseq_sign}")
+#     y -= 20
+
+#     # Finally, save the PDF
+#     pdf.showPage()
+#     pdf.save()
+
+#     return response
+
+
 @allowed_users(allowed_roles=['staff'])
 def create_nhis_form(request):
     if request.method == 'POST':
         form = NHISSubmissionForm(request.POST)
         if form.is_valid():
+            # Access the cleaned data for hazard
             submission = form.save(commit=False)
             submission.user = request.user
             submission.save()
+
+            # Save the Many-to-Many relationship
+            form.save_m2m()
+
 
             subject = "New PTW Form Submission"
             message = f"""
@@ -517,15 +767,22 @@ def nhis_list(request):
     submissions = NHISForm.objects.none()
 
     if request.user.is_authenticated:
+        location_search = request.GET.get('location_search', '')
+
+        # Filter submissions based on the location search if provided
+        if location_search:
+            location_filter = NHISForm.objects.filter(location__icontains=location_search)
+        else:
+            location_filter = NHISForm.objects.all()
         # Check user roles and filter submissions accordingly
         if request.user.groups.filter(name='staff').exists():
-            # Staffs can only see their own submissions
-            submissions = NHISForm.objects.filter(user=request.user)
+            # Vendor can only see their own submissions
+            submissions = location_filter.filter(user=request.user)
         elif request.user.groups.filter(name='manager').exists():
-            submissions = NHISForm.objects.filter(status__in=['awaiting_manager', 'closed'])
+            submissions = location_filter.filter(status__in=['awaiting_manager', 'closed'])
 
         elif request.user.groups.filter(name='supervisor').exists():
-            submissions = NHISForm.objects.all()
+            submissions = location_filter
 
     return render(request, 'nhis_list.html', {
         'submissions': submissions,
