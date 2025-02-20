@@ -31,7 +31,10 @@ def unauthenticated_user(view_func):
 			elif request.user.groups.filter(name='manager').exists():
 				return redirect('manager')
 			else:
-				return redirect('home')
+				return HttpResponse('''
+                    <h1>You are signed in as an admin please logout and sign in as a user</h1>
+                    <button onclick="window.location.href='/logout';">Logout</button>
+                ''')
 		else:
 			return view_func(request, *args, **kwargs)
 

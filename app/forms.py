@@ -6,30 +6,15 @@ from .models import PTWForm, SafetyPrecaution, WorkLocationIsolation, PersonalSa
 from django.forms.widgets import ClearableFileInput
 
 
-class ProfileEditForm(forms.ModelForm):
-    class Meta:
-        model = Member
-        fields = ['email', 'phone', 'address', 'profile_picture']
-
-class MultiFileInput(ClearableFileInput):
-    allow_multiple_selected = True
-
-    def __init__(self, attrs=None):
-        super().__init__(attrs)
-        if attrs is None:
-            attrs = {}
-        attrs.update({'multiple': 'multiple'})
-        self.attrs = attrs
-
 
 class CreateUserForm(UserCreationForm):
     group_choices = forms.ChoiceField(
         choices=[('staff', 'Staff'), ('vendor', 'Vendor Supervisor')],
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        fields = ['username', 'email', 'password1', 'password2', 'first_name','last_name']
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -59,7 +44,7 @@ class PTWSubmissionForm(forms.ModelForm):
     work_description = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     equipment_tools_materials = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     risk_assessment_done = forms.ChoiceField(choices=[('yes', 'Yes'), ('no', 'No')], widget=forms.Select(attrs={'class': 'form-select'}))
-    # attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=True)
+    attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
 
     #Work Duration and Personnel
     start_datetime = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
@@ -119,7 +104,7 @@ class PTWSubmissionForm(forms.ModelForm):
     contractor_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
     contractor_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
     contractor_sign = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    # project_attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=True)
+    project_attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=True)
 
     #HSEQ
     hseq_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)

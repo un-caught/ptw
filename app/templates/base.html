@@ -119,11 +119,10 @@
         </div>
         {% if is_staff or is_vendor %}
             <a href="{% url 'client' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-            <a href="{% url 'create_form' %}"><i class="fas fa-form"></i> Create PTW Form</a>
-            <a href="{% url 'create_nhis' %}"><i class="fas fa-form"></i> Create NHIR Form</a>
-            <a href="{% url 'form_list' %}"><i class="fas fa-form"></i>PTW Forms</a>
-            <a href="{% url 'nhis_list' %}"><i class="fas fa-form"></i>NHIR Forms</a>
-            <a href="#"><i class="fas fa-cogs"></i> Settings</a>
+            <a href="{% url 'create_form' %}"><i class="fas fa-plus-circle"></i> Create PTW Form</a>
+            <a href="{% url 'create_nhis' %}"><i class="fas fa-plus-circle"></i> Create NHIR Form</a>
+            <a href="{% url 'form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
+            <a href="{% url 'nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
             <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
 
         {% else %}
@@ -132,10 +131,9 @@
             {% else %}
             <a href="{% url 'manager' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
             {% endif %}
-            <a href="{% url 'form_list' %}"><i class="fas fa-form"></i>PTW Forms</a>
-            <a href="{% url 'nhis_list' %}"><i class="fas fa-form"></i>NHIR Forms</a>
-            <a href="{% url 'form_report' %}"><i class="fas fa-form"></i>Report</a>
-            <a href="#"><i class="fas fa-cogs"></i> Settings</a>
+            <a href="{% url 'form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
+            <a href="{% url 'nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
+            <a href="{% url 'form_report' %}"><i class="fas fa-file-alt"></i> Report</a>
             <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
         {% endif %}
 
@@ -166,8 +164,8 @@
                 <span class="user-name me-3">Welcome, {{request.user.first_name}} {{request.user.last_name}}</span>
                 
                 <!-- Notifications and Profile Links -->
-                <a class="nav-link" href="#" style="padding-right: 0.3rem;"><i class="fas fa-bell"></i> Notifications</a>
-                <a class="nav-link" href="#"><i class="fas fa-user"></i> Profile</a>
+                {% comment %} <a class="nav-link" href="#" style="padding-right: 0.3rem;"><i class="fas fa-bell"></i> Notifications</a>
+                <a class="nav-link" href="#"><i class="fas fa-user"></i> Profile</a> {% endcomment %}
             </div>
         </nav>
 
