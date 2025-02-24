@@ -117,13 +117,17 @@
         <div class="text-center text-white mb-4">
             <h3>Hello, {{request.user.first_name}}</h3>
         </div>
-        {% if is_staff or is_vendor %}
+        {% if is_staff %}
             <a href="{% url 'client' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-            <a href="{% url 'create_form' %}"><i class="fas fa-plus-circle"></i> Create PTW Form</a>
             <a href="{% url 'create_nhis' %}"><i class="fas fa-plus-circle"></i> Create NHIR Form</a>
-            <a href="{% url 'form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
             <a href="{% url 'nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
-            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <a href="{% url 'dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
+        
+        {% elif is_vendor %}
+        <a href="{% url 'client' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="{% url 'create_form' %}"><i class="fas fa-plus-circle"></i> Create PTW Form</a>
+        <a href="{% url 'form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
+        <a href="{% url 'dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
 
         {% else %}
             {% if is_supervisor %}
@@ -134,7 +138,7 @@
             <a href="{% url 'form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
             <a href="{% url 'nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
             <a href="{% url 'form_report' %}"><i class="fas fa-file-alt"></i> Report</a>
-            <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            <a href="{% url 'dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
         {% endif %}
 
     </div>

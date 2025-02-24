@@ -42,6 +42,8 @@ matplotlib.use('Agg')
 def custom_404(request, exception=None):
     return render(request, '404.html', status=404)
 
+
+
 @unauthenticated_user
 def loginPage(request):
     if request.method == 'POST':
@@ -52,20 +54,37 @@ def loginPage(request):
 
         if user is not None:
             login(request, user)
-            if user.groups.filter(name='manager').exists():
-                return redirect('manager')
-            elif user.groups.filter(name='supervisor').exists():
-                return redirect('supervisor')
-            elif user.groups.filter(name='staff').exists():
-                return redirect('client')
-            elif user.groups.filter(name='vendor').exists():
-                return redirect('client')
-            else:
-                messages.info(request, 'Username or Password is incorrect')
+            return redirect('dashboard')
 
         else:
             messages.info(request, 'Username or Password is incorrect')
     return render(request, 'login.html')
+
+
+# @unauthenticated_user
+# def loginPage(request):
+#     if request.method == 'POST':
+#         username = request.POST.get('username')
+#         password = request.POST.get('password')
+
+#         user = authenticate(request, username=username, password=password)
+
+#         if user is not None:
+#             login(request, user)
+#             if user.groups.filter(name='manager').exists():
+#                 return redirect('manager')
+#             elif user.groups.filter(name='supervisor').exists():
+#                 return redirect('supervisor')
+#             elif user.groups.filter(name='staff').exists():
+#                 return redirect('client')
+#             elif user.groups.filter(name='vendor').exists():
+#                 return redirect('client')
+#             else:
+#                 messages.info(request, 'Username or Password is incorrect')
+
+#         else:
+#             messages.info(request, 'Username or Password is incorrect')
+#     return render(request, 'login.html')
 
 @login_required(login_url='login')
 def logoutUser(request):
@@ -102,6 +121,11 @@ def registerPage(request):
 
     context = {'form':form}
     return render(request, 'register.html', context)
+
+
+@login_required(login_url='login')
+def dashboard(request):
+    return render(request, 'dashboard.html')
 
 
 
