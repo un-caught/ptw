@@ -80,67 +80,144 @@
   <div class="container">
     <div class="row g-1">
       <div class="col-4 mb-3">
-        <a  class="link-box" style="background-color: #af5ec5;">Leave Management System</a>
+        <a class="link-box" style="background: linear-gradient(45deg, #af5ec5,rgb(211, 147, 236)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          Leave Management System
+        </a>
       </div>
       <div class="col-4 mb-3">
-        <a  class="link-box" style="background-color: #993f3e;">Employee of the Quarter</a>
+        <a class="link-box" style="background: linear-gradient(45deg, #993f3e,rgb(236, 135, 135)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          Employee of the Quarter
+        </a>
       </div>
       <div class="col-4 mb-3">
-        <a  class="link-box" style="background-color: #90bb4f;">Vehicle Request</a>
+        <a class="link-box" style="background: linear-gradient(45deg, #90bb4f,rgb(191, 236, 163)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          Vehicle Request
+        </a>
       </div>
     </div>
     <div class="row g-1">
       <div class="col-4 mb-3">
-        <a  class="link-box" style="background-color: #ff6600;">Help Desk</a>
+        <a class="link-box" style="background: linear-gradient(45deg, #ff6600,rgb(229, 169, 138)); 
+                                                                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                                                     position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          Help Desk
+        </a>
       </div>
       <div class="col-4 mb-3">
-        <a  class="link-box" style="background-color: #5f7cb4;">Image Gallery</a>
+        <a class="link-box" style="background: linear-gradient(45deg, #5f7cb4,rgb(152, 176, 231)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          Image Gallery
+        </a>
       </div>
       <div class="col-4 mb-3">
-        <a  class="link-box" style="background-color: #FF8C33;">Admin Form</a>
+        <a class="link-box" style="background: linear-gradient(45deg, #FF8C33,rgb(240, 196, 143)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          Admin Form
+        </a>
       </div>
     </div>
     <div class="row g-1">
       <div class="col-4 mb-3">
-        <a  class="link-box" style="background-color: #33FFEC;">Internet Guest Access</a>
+        <a class="link-box" style="background: linear-gradient(45deg, #33FFEC,rgb(161, 240, 200)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          Internet Guest Access
+        </a>
       </div>
       {% if is_staff %}
       <div class="col-4 mb-3">
-        <a href="{% url 'client' %}" class="link-box" style="background-color: #FF33D4;">NHIR</a>
+        <a href="{% url 'client' %}" class="link-box" style="background: linear-gradient(45deg, #FF33D4,rgb(228, 173, 201)); 
+                                                                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                                                     position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          NHIR
+        </a>
       </div> 
       {% elif is_supervisor %}
       <div class="col-4 mb-3">
-        <a href="{% url 'supervisor' %}" class="link-box" style="background-color: #FF33D4;">NHIR</a>
+        <a href="{% url 'supervisor' %}" class="link-box" style="background: linear-gradient(45deg, #FF33D4,rgb(221, 179, 200)); 
+                                                                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                                                     position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          NHIR
+        </a>
       </div>
       {% elif is_manager %}
       <div class="col-4 mb-3">
-        <a href="{% url 'manager' %}" class="link-box" style="background-color: #FF33D4;">NHIR</a>
+        <a href="{% url 'manager' %}" class="link-box" style="background: linear-gradient(45deg, #FF33D4,rgb(211, 156, 183)); 
+                                                                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                                                     position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          NHIR
+        </a>
       </div>     
       {% else %}
       <div class="col-4 mb-3">
-        <a class="link-box" style="background-color: #FF33D4;">NHIR </a>
+        <a class="link-box" style="background: linear-gradient(45deg, #FF33D4,rgb(224, 175, 200)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          NHIR
+        </a>
       </div>
       {% endif %}
-
+  
       {% if is_vendor %}
       <div class="col-4 mb-3">
-        <a href="{% url 'client' %}" class="link-box" style="background-color: #FFD700;">PTW</a>
+        <a href="{% url 'client' %}" class="link-box" style="background: linear-gradient(45deg, #FFD700,rgb(228, 213, 154)); 
+                                                                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                                                     position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          PTW
+        </a>
       </div> 
       {% elif is_supervisor %}
       <div class="col-4 mb-3">
-        <a href="{% url 'supervisor' %}" class="link-box" style="background-color: #FFD700;">PTW</a>
+        <a href="{% url 'supervisor' %}" class="link-box" style="background: linear-gradient(45deg, #FFD700,rgb(228, 214, 158)); 
+                                                                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                                                     position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          PTW
+        </a>
       </div>
       {% elif is_manager %}
       <div class="col-4 mb-3">
-        <a href="{% url 'manager' %}" class="link-box" style="background-color: #FFD700;">PTW</a>
+        <a href="{% url 'manager' %}" class="link-box" style="background: linear-gradient(45deg, #FFD700,rgb(219, 207, 159)); 
+                                                                     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                                                     position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          PTW
+        </a>
       </div>     
       {% else %}
       <div class="col-4 mb-3">
-        <a class="link-box" style="background-color: #FFD700;">PTW</a>
+        <a class="link-box" style="background: linear-gradient(45deg, #FFD700,rgb(211, 199, 151)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          PTW
+        </a>
       </div>
       {% endif %}
     </div>
   </div>
+  
+  
 
 </body>
 </html>
