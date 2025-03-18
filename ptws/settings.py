@@ -24,8 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-r)2=#dj^_i22*3-*e&7+m(pq=sg+n@r+r08pixd^x%$wp7cmj2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = []
+DEBUG = False
+ALLOWED_HOSTS = ['ptw-c0q3.onrender.com', 'ptws.onrender.com']
 
 
 # Application definition
@@ -99,7 +99,7 @@ DATABASES = {
         'NAME': 'falcon',
         'USER' : 'falcon',
         'PASSWORD': 'RPXJXVDvpwwNNAEmDxxOiJdoSBqgHj8z',
-        'HOST': 'postgresql://falcon:RPXJXVDvpwwNNAEmDxxOiJdoSBqgHj8z@dpg-cvcnnurv2p9s73ekc47g-a.oregon-postgres.render.com/falcon_heig', 
+        'HOST': 'dpg-cvcnnurv2p9s73ekc47g-a', 
         'PORT': '5432',  
     }
 }
