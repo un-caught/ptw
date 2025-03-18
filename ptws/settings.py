@@ -96,7 +96,7 @@ WSGI_APPLICATION = 'ptws.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'falcon',
+        'NAME': 'falcon_heig',
         'USER' : 'falcon',
         'PASSWORD': 'RPXJXVDvpwwNNAEmDxxOiJdoSBqgHj8z',
         'HOST': 'dpg-cvcnnurv2p9s73ekc47g-a', 
