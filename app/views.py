@@ -54,7 +54,7 @@ def loginPage(request):
 
         if user is not None:
             login(request, user)
-            return redirect('dashboard')
+            return redirect('app:dashboard')
 
         else:
             messages.info(request, 'Username or Password is incorrect')
@@ -86,10 +86,10 @@ def loginPage(request):
 #             messages.info(request, 'Username or Password is incorrect')
 #     return render(request, 'login.html')
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 def logoutUser(request):
     logout(request)
-    return redirect('login') 
+    return redirect('app:login') 
 
 
 @unauthenticated_user
@@ -108,7 +108,7 @@ def registerPage(request):
                 group = Group.objects.get(name=group_name)
             except Group.DoesNotExist:
                 messages.error(request, f"Group {group_name} does not exist.")
-                return redirect('register')
+                return redirect('app:register')
 
             user.groups.add(group)
             Member.objects.create(
@@ -117,26 +117,26 @@ def registerPage(request):
 
             messages.success(request, f"Account was created for {username} and assigned to {group_name} group.")
 
-            return redirect('register')
+            return redirect('app:register')
 
     context = {'form':form}
     return render(request, 'register.html', context)
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 def dashboard(request):
     return render(request, 'dashboard.html')
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['staff', 'vendor'])
 def clientDashboard(request):
     return render(request, 'client.html')
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['supervisor'])
 def supervisorDashboard(request):
     # Get the current year
@@ -223,7 +223,7 @@ def supervisorDashboard(request):
     })
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['manager'])
 def managerDashboard(request):
     # Get the current year
@@ -341,7 +341,7 @@ def send_mail_to_user_and_supervisors(user_email, subject, message):
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['vendor'])
 def create_ptw_form(request):
     if request.method == 'POST':
@@ -375,7 +375,7 @@ def create_ptw_form(request):
             # Send the email to the signed-in user and supervisors
             send_mail_to_user_and_supervisors(submission.user.email, subject, message)
 
-            return redirect('form_list')
+            return redirect('app:form_list')
 
         else:
             print(form.errors)
@@ -385,7 +385,7 @@ def create_ptw_form(request):
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['vendor','supervisor','manager'])
 def form_list(request):
     submissions = PTWForm.objects.none()
@@ -413,7 +413,7 @@ def form_list(request):
     })
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['vendor','supervisor','manager'])
 def edit_form(request, pk):
     submission = get_object_or_404(PTWForm, pk=pk)
@@ -437,7 +437,7 @@ def edit_form(request, pk):
                     submission.save()
 
             # After status update, redirect to the form list
-            return redirect('form_list')
+            return redirect('app:form_list')
         else:
             print(form.errors)
 
@@ -449,7 +449,7 @@ def edit_form(request, pk):
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['vendor'])
 def delete_form(request, pk):
     # Fetch the FormSubmission object or return a 404 if it doesn't exist
@@ -459,10 +459,10 @@ def delete_form(request, pk):
     submission.delete()
 
     # Redirect to the form list page after deletion
-    return redirect('form_list')
+    return redirect('app:form_list')
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 
 def view_form(request, pk):
     # Get the form submission by its primary key (pk)
@@ -475,17 +475,17 @@ def view_form(request, pk):
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['supervisor'])
 def approve_supervisor(request, pk):
     submission = get_object_or_404(PTWForm, pk=pk)
     if submission.status == 'supervisor_signed':
         submission.status = 'awaiting_manager'  # Change status to 'awaiting supervisor approval'
         submission.save()
-    return redirect('form_list')
+    return redirect('app:form_list')
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['supervisor'])
 def disapprove_supervisor(request, pk):
     submission = get_object_or_404(PTWForm, pk=pk)
@@ -493,10 +493,10 @@ def disapprove_supervisor(request, pk):
     if request.user.groups.filter(name='supervisor').exists():  # Check if the user is a supervisor
         submission.status = 'disapproved'  # Change the status to 'disapproved'
         submission.save()  # Save the updated status
-    return redirect('form_list')
+    return redirect('app:form_list')
 
 # View to approve a submission (Manager Approval)
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['manager'])
 def approve_manager(request, pk):
     submission = get_object_or_404(PTWForm, pk=pk)
@@ -508,10 +508,10 @@ def approve_manager(request, pk):
         message = f"Dear {submission.user.get_full_name()},\n\nYour PTW form located at '{submission.location}' has been approved by the manager.\n\nThank you."
 
         send_mail_to_user_and_supervisors(submission.user.email, subject, message)
-    return redirect('form_list')
+    return redirect('app:form_list')
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['manager'])
 def disapprove_manager(request, pk):
     submission = get_object_or_404(PTWForm, pk=pk)
@@ -519,10 +519,10 @@ def disapprove_manager(request, pk):
     if request.user.groups.filter(name='manager').exists(): 
         submission.status = 'disapproved' 
         submission.save()  
-    return redirect('form_list')
+    return redirect('app:form_list')
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['staff'])
 def create_nhis_form(request):
     if request.method == 'POST':
@@ -553,13 +553,13 @@ def create_nhis_form(request):
 
             # Send the email to the signed-in user and supervisors
             send_mail_to_user_and_supervisors(submission.user.email, subject, message)
-            return redirect('nhis_list')
+            return redirect('app:nhis_list')
     else:
         form = NHISSubmissionForm()
     return render(request, 'nhis.html', {'form':form})
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['staff','supervisor','manager'])
 def nhis_list(request):
     submissions = NHISForm.objects.none()
@@ -587,17 +587,17 @@ def nhis_list(request):
     })
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['supervisor'])
 def approve_nhis_supervisor(request, pk):
     submission = get_object_or_404(NHISForm, pk=pk)
     if submission.status == 'awaiting_supervisor':
         submission.status = 'awaiting_manager'  # Change status to 'awaiting supervisor approval'
         submission.save()
-    return redirect('nhis_list')
+    return redirect('app:nhis_list')
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['supervisor'])
 def disapprove_nhis_supervisor(request, pk):
     submission = get_object_or_404(NHISForm, pk=pk)
@@ -605,10 +605,10 @@ def disapprove_nhis_supervisor(request, pk):
     if request.user.groups.filter(name='supervisor').exists():  # Check if the user is a supervisor
         submission.status = 'denied'  # Change the status to 'disapproved'
         submission.save()  # Save the updated status
-    return redirect('nhis_list')
+    return redirect('app:nhis_list')
 
 # View to approve a submission (Manager Approval)
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['manager'])
 def approve_nhis_manager(request, pk):
     submission = get_object_or_404(NHISForm, pk=pk)
@@ -620,10 +620,10 @@ def approve_nhis_manager(request, pk):
         message = f"Dear {submission.user.get_full_name()},\n\nYour NHIS form located at '{submission.location}', \n\n Dated  '{submission.date}' has been approved by the manager.\n\nThank you."
 
         send_mail_to_user_and_supervisors(submission.user.email, subject, message)
-    return redirect('nhis_list')
+    return redirect('app:nhis_list')
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['manager'])
 def disapprove_nhis_manager(request, pk):
     submission = get_object_or_404(NHISForm, pk=pk)
@@ -631,12 +631,12 @@ def disapprove_nhis_manager(request, pk):
     if request.user.groups.filter(name='manager').exists(): 
         submission.status = 'denied' 
         submission.save()  
-    return redirect('nhis_list')
+    return redirect('app:nhis_list')
 
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['staff'])
 def edit_nhis_form(request, pk):
     submission = get_object_or_404(NHISForm, pk=pk)
@@ -644,13 +644,13 @@ def edit_nhis_form(request, pk):
         form = NHISSubmissionForm(request.POST, instance=submission)
         if form.is_valid():
             form.save()
-            return redirect('nhis_list')  # Redirect to the list view after updating
+            return redirect('app:nhis_list')  # Redirect to the list view after updating
     else:
         form = NHISSubmissionForm(instance=submission)
     return render(request, 'edit_nhis_form.html', {'form': form, 'submission': submission})
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['staff'])
 def delete_nhis_form(request, pk):
     # Fetch the FormSubmission object or return a 404 if it doesn't exist
@@ -660,10 +660,10 @@ def delete_nhis_form(request, pk):
     submission.delete()
 
     # Redirect to the form list page after deletion
-    return redirect('nhis_list')
+    return redirect('app:nhis_list')
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 def view_nhis_form(request, pk):
     # Get the form submission by its primary key (pk)
     submission = get_object_or_404(NHISForm, pk=pk)
@@ -674,7 +674,7 @@ def view_nhis_form(request, pk):
 
 
 
-@login_required(login_url='login')
+@login_required(login_url='app:login')
 @allowed_users(allowed_roles=['admin', 'supervisor'])
 def form_report(request):
     start_date = None

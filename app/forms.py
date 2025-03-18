@@ -44,7 +44,7 @@ class PTWSubmissionForm(forms.ModelForm):
     work_description = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     equipment_tools_materials = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
     risk_assessment_done = forms.ChoiceField(choices=[('yes', 'Yes'), ('no', 'No')], widget=forms.Select(attrs={'class': 'form-select'}))
-    attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}))
+    attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=False)
 
     #Work Duration and Personnel
     start_datetime = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
@@ -104,7 +104,7 @@ class PTWSubmissionForm(forms.ModelForm):
     contractor_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
     contractor_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
     contractor_sign = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    project_attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=True)
+    project_attachment = forms.FileField(widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=False)
 
     #HSEQ
     hseq_name = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)

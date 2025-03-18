@@ -22,7 +22,7 @@ def allowed_users(allowed_roles=[]):
 def unauthenticated_user(view_func):
 	def wrapper_func(request, *args, **kwargs):
 		if request.user.is_authenticated:
-			return redirect('dashboard')
+			return redirect('app:dashboard')
 		else:
 			return view_func(request, *args, **kwargs)
 

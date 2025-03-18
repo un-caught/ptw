@@ -10,7 +10,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #123d16;
+            background-color: #005d55;
             color: white;
         }
         .registration-container {
@@ -41,7 +41,7 @@
         <a href="#" class="link">Access SharePoint Portal</a>
         <a href="#" class="link">Access Falcon Website</a>
     </div>
-    <div class="registration-container">
+    <div class="registration-container" style="margin-bottom: 180px;">
         <div class="text-center mb-4">
             <img src="{% static 'img/falcon.png' %}" alt="Falcon Logo" class="img-fluid mb-2">
             <div class="fs-4">HSEQ Service Portal - Registration</div>
@@ -93,6 +93,9 @@
                     <label class="label" for="password2" style="margin-bottom: 5px;">Confirm Password</label>
                     {{ form.password2 }}
                 </div>
+                <div>
+                    <input type="checkbox" class="form-check-input mr-2" required /> I agree to the Terms and Conditions
+                </div>
         
                 <!-- Submit Button -->
                 <div class="bg-info input-box d-flex align-items-center justify-content-center" style="background-color: #69d0ff; padding: 10px;">
@@ -111,11 +114,8 @@
             <div>{{ form.errors }}</div>
         </form>
         
-        <div class="d-flex justify-content-between w-100 mt-4 px-4 small">
-            <div>
-                <input type="checkbox" class="form-check-input mr-2" /> I agree to the Terms and Conditions
-            </div>
-            <a href="{% url 'login' %}" class="link">Already have an account? Login</a>
+        <div class="d-flex justify-content-between w-100 mt-4 px-4 small" >
+            <a href="{% url 'app:login' %}" class="link">Already have an account? Login</a>
         </div>
     </div>
 </body>

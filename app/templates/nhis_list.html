@@ -6,7 +6,7 @@
     <div class="card-body">
         <h1 class="text-center mb-4 mt-2">Hazard Identificaions Forms (NHIR) Forms</h1>
         {% if is_staff %}
-        <a href="{% url 'create_nhis' %}" class="btn btn-primary mb-3" >Create New NHIR Form</a>
+        <a href="{% url 'app:create_nhis' %}" class="btn btn-primary mb-3" >Create New NHIR Form</a>
         {% endif %}
 
         <form method="get" class="mb-4">
@@ -65,14 +65,14 @@
                                     <a href="#" class="btn btn-sm btn-secondary mb-1">Print</a>
                                     <br>
                                 {% elif submission.status == 'awaiting_supervisor' %}
-                                    <a href="{% url 'edit_nhis_form' submission.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                                    <a href="{% url 'app:edit_nhis_form' submission.pk %}" class="btn btn-sm btn-secondary">Edit</a>
                                 {% endif %}
-                                <form action="{% url 'delete_nhis_form' submission.pk %}" method="post" style="display: inline;" class="pb-2">
+                                <form action="{% url 'app:delete_nhis_form' submission.pk %}" method="post" style="display: inline;" class="pb-2">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                 </form>
                             {% elif is_supervisor or is_manager %}
-                                <a href="{% url 'view_nhis_form' submission.pk %}" class="btn btn-sm btn-info">View</a>
+                                <a href="{% url 'app:view_nhis_form' submission.pk %}" class="btn btn-sm btn-info">View</a>
                             {% endif %}
                         </td>
 
@@ -80,19 +80,19 @@
                         <td>
                             {% if is_supervisor %}
                                 {% if submission.status == 'awaiting_supervisor' %}
-                                <a href="{% url 'approve_nhis_supervisor' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve</a>
-                                <a href="{% url 'disapprove_nhis_supervisor' submission.pk %}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
+                                <a href="{% url 'app:approve_nhis_supervisor' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve</a>
+                                <a href="{% url 'app:disapprove_nhis_supervisor' submission.pk %}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
                                 {% endif %}
                             {% elif is_manager %}
                                 {% if submission.status == 'awaiting_manager' %}
-                                <a href="{% url 'approve_nhis_manager' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve</a>
-                                <a href="{% url 'disapprove_nhis_manager' submission.pk %}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
+                                <a href="{% url 'app:approve_nhis_manager' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve</a>
+                                <a href="{% url 'app:disapprove_nhis_manager' submission.pk %}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
                                 {% endif %}
                             {% comment %} {% else %}
                                 {% if submission.status == 'open' %}
-                                <a href="{% url 'approve_nhis_supervisor' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve Supervisor</a>
+                                <a href="{% url 'app:approve_nhis_supervisor' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve Supervisor</a>
                                 {% elif submission.status == 'awaiting_supervisor' %}
-                                <a href="{% url 'approve_nhis_manager' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve Manager</a>
+                                <a href="{% url 'app:approve_nhis_manager' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve Manager</a>
                                 {% endif %} {% endcomment %}
                             {% endif %}
                         </td>

@@ -10,7 +10,7 @@
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #00351f;
+            background-color: #005d55;
             color: white;
         }
         .login-container {
@@ -38,8 +38,8 @@
 </head>
 <body>
     <div class="d-flex justify-content-between p-4 small">
-        <a href="#" class="link">Access SharePoint Portal</a>
-        <a href="#" class="link">Access Falcon Website</a>
+        <a href="https://sharepoint.falcon-corporation.com/" class="link">Access SharePoint Portal</a>
+        <a href="https://www.falcon-corporation.com/fcl/home/" class="link">Access Falcon Website</a>
     </div>
     <div class="login-container">
         <div class="text-center mb-4">
@@ -69,8 +69,8 @@
             <div>
                 <input type="checkbox" class="form-check-input mr-2" /> Remember Me
             </div>
-            <a href="{% url 'register' %}" class="link">Don't have an account? Register</a>
-            <a href="{% url 'password_reset' %}" class="link">Forgot Password?</a>
+            <a href="{% url 'app:register' %}" class="link">Don't have an account? Register</a>
+            {% comment %} <a href="{% url 'app:password_reset' %}" class="link">Forgot Password?</a> {% endcomment %}
         </div>
     </div>
 </body>

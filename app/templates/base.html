@@ -120,27 +120,27 @@
             <h3>Hello, {{request.user.first_name}}</h3>
         </div>
         {% if is_staff %}
-            <a href="{% url 'client' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-            <a href="{% url 'create_nhis' %}"><i class="fas fa-plus-circle"></i> Create NHIR Form</a>
-            <a href="{% url 'nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
-            <a href="{% url 'dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
+            <a href="{% url 'app:client' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="{% url 'app:create_nhis' %}"><i class="fas fa-plus-circle"></i> Create NHIR Form</a>
+            <a href="{% url 'app:nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
+            <a href="{% url 'app:dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
         
         {% elif is_vendor %}
-        <a href="{% url 'client' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-        <a href="{% url 'create_form' %}"><i class="fas fa-plus-circle"></i> Create PTW Form</a>
-        <a href="{% url 'form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
-        <a href="{% url 'dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
+        <a href="{% url 'app:client' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="{% url 'app:create_form' %}"><i class="fas fa-plus-circle"></i> Create PTW Form</a>
+        <a href="{% url 'app:form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
+        <a href="{% url 'app:dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
 
         {% else %}
             {% if is_supervisor %}
-            <a href="{% url 'supervisor' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>            
+            <a href="{% url 'app:supervisor' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>            
             {% else %}
-            <a href="{% url 'manager' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="{% url 'app:manager' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
             {% endif %}
-            <a href="{% url 'form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
-            <a href="{% url 'nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
-            <a href="{% url 'form_report' %}"><i class="fas fa-file-alt"></i> Report</a>
-            <a href="{% url 'dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
+            <a href="{% url 'app:form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
+            <a href="{% url 'app:nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
+            <a href="{% url 'app:form_report' %}"><i class="fas fa-file-alt"></i> Report</a>
+            <a href="{% url 'app:dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
         {% endif %}
 
     </div>
@@ -155,11 +155,11 @@
                 <i class="fas fa-bars"></i>
             </button>
             {% if is_staff or is_vendor  %}
-                <a class="navbar-brand" href="{% url 'client' %}">Dashboard</a>
+                <a class="navbar-brand" href="{% url 'app:client' %}">Dashboard</a>
             {% elif is_supervisor %}
-                <a class="navbar-brand" href="{% url 'supervisor' %}">Supervisor Dashboard</a>
+                <a class="navbar-brand" href="{% url 'app:supervisor' %}">Supervisor Dashboard</a>
             {% else %}
-                <a class="navbar-brand" href="{% url 'manager' %}">Manager Dashboard</a>
+                <a class="navbar-brand" href="{% url 'app:manager' %}">Manager Dashboard</a>
             {% endif %}
             
 
@@ -188,6 +188,8 @@
     <!-- AOS (Animate On Scroll) Library -->
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script defer src="https://static.getbutton.io/widget/bundle.js?id=plvX3"></script>
+    
 
 
     <script>
