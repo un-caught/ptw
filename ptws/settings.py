@@ -24,9 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-r)2=#dj^_i22*3-*e&7+m(pq=sg+n@r+r08pixd^x%$wp7cmj2'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-
-ALLOWED_HOSTS = ['ptw-c0q3.onrender.com', 'ptws.onrender.com']
+DEBUG = True
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -39,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app',
+    'helpdesk',
     'whitenoise.runserver_nostatic',
 ]
 
@@ -78,10 +78,29 @@ WSGI_APPLICATION = 'ptws.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+# import dj_database_url
+
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default='postgresql://postgres:Ayomiposi1@db.lysepiwtogyyrivbdtzg.supabase.co:5432/postgres'
+#     )
+# }
+
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'falcon',
+        'USER' : 'falcon',
+        'PASSWORD': 'RPXJXVDvpwwNNAEmDxxOiJdoSBqgHj8z',
+        'HOST': 'postgresql://falcon:RPXJXVDvpwwNNAEmDxxOiJdoSBqgHj8z@dpg-cvcnnurv2p9s73ekc47g-a.oregon-postgres.render.com/falcon_heig', 
+        'PORT': '5432',  
     }
 }
 
@@ -122,14 +141,13 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 
 # Default primary key field type
@@ -141,5 +159,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'korodeleboluwatife@gmail.com'
-EMAIL_HOST_PASSWORD = 'gmbs ovik fyem xnbd'
+EMAIL_HOST_USER = 'donotreplythismail34@gmail.com'
+EMAIL_HOST_PASSWORD = 'dslw uasc tmba vwuz'
