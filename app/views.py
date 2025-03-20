@@ -115,7 +115,7 @@ def registerPage(request):
                 user=user,
                 )
 
-            messages.success(request, f"Account was created for {username} and assigned to {group_name} group.")
+            messages.success(request, f"Account was created for {username}.")
 
             return redirect('app:register')
 
