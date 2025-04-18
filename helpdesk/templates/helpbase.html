@@ -207,11 +207,11 @@
                     <i class="fas fa-ticket-alt"></i> Tickets
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item" href=""><i class="fas fa-plus-circle"></i> New Ticket</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-users"></i> Ticket for Others</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-list"></i> List of My Tickets</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-cogs"></i> Admin Dashboard</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-headset"></i> IT Support Tickets List</a></li>
+                    <li><a class="dropdown-item" href="{% url 'helpdesk:new_ticket' %}"><i class="fas fa-plus-circle"></i> New Ticket</a></li>
+                    <li><a class="dropdown-item" href="{% url 'helpdesk:ticket_others' %}"><i class="fas fa-users"></i> Ticket for Others</a></li>
+                    <li><a class="dropdown-item" href="{% url 'helpdesk:help_list' %}"><i class="fas fa-list"></i> List of My Tickets</a></li>
+                    <li><a class="dropdown-item" href="{% url 'helpdesk:admin_dash' %}"><i class="fas fa-cogs"></i> Admin Dashboard</a></li>
+                    <li><a class="dropdown-item" href="{% url 'helpdesk:it_help_list' %}"><i class="fas fa-headset"></i> IT Support Tickets List</a></li>
                     <li><a class="dropdown-item" href=""><i class="fas fa-search"></i> Quick Search</a></li>
                 </ul>
             </div>
@@ -220,8 +220,8 @@
                     <i class="fas fa-cogs"></i> Setup
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item" href=""><i class="fas fa-tasks"></i> Manage Priority</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-th-list"></i> Manage Categories</a></li>
+                    <li><a class="dropdown-item" href="{% url 'helpdesk:priority-list' %}"><i class="fas fa-tasks"></i> Manage Priority</a></li>
+                    <li><a class="dropdown-item" href="{% url 'helpdesk:category-list' %}"><i class="fas fa-th-list"></i> Manage Categories</a></li>
                     <li><a class="dropdown-item" href=""><i class="fas fa-cogs"></i> Manage Issues</a></li>
                 </ul>
             </div>
@@ -285,6 +285,7 @@
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script defer src="https://static.getbutton.io/widget/bundle.js?id=plvX3" ></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 
 
     <script>
