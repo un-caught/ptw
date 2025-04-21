@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'app',
     'helpdesk',
     'whitenoise.runserver_nostatic',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
