@@ -139,16 +139,16 @@
           Internet Guest Access
         </a>
       </div> {% endcomment %}
-      <div class="col-4 mb-3">
+      {% comment %} <div class="col-4 mb-3">
         <a href="{% url 'helpdesk:home' %}" class="link-box" style="background: linear-gradient(45deg, #ff6600,rgb(229, 169, 138)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                                                      position: relative; font-size: 30px;">
           <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
           <b>Help Desk </b>
         </a>
-      </div>
+      </div> {% endcomment %}
       {% if is_staff %}
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a href="{% url 'app:client' %}" class="link-box" style="background: linear-gradient(45deg, #FF33D4,rgb(228, 173, 201)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                                                      position: relative; font-size: 30px;">
@@ -157,7 +157,7 @@
         </a>
       </div> 
       {% elif is_supervisor %}
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a href="{% url 'app:supervisor' %}" class="link-box" style="background: linear-gradient(45deg, #FF33D4,rgb(221, 179, 200)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                                                      position: relative; font-size: 30px;">
@@ -166,7 +166,7 @@
         </a>
       </div>
       {% elif is_manager %}
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a href="{% url 'app:manager' %}" class="link-box" style="background: linear-gradient(45deg, #FF33D4,rgb(211, 156, 183)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                                                      position: relative; font-size: 30px;">
@@ -175,7 +175,7 @@
         </a>
       </div>     
       {% else %}
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a class="link-box" style="background: linear-gradient(45deg, #FF33D4,rgb(224, 175, 200)); 
                                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                   position: relative; font-size: 30px;">
@@ -186,7 +186,7 @@
       {% endif %}
   
       {% if is_vendor %}
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a href="{% url 'app:client' %}" class="link-box" style="background: linear-gradient(45deg, #FFD700,rgb(228, 213, 154)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                                                      position: relative; font-size: 30px;">
@@ -195,7 +195,7 @@
         </a>
       </div> 
       {% elif is_supervisor %}
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a href="{% url 'app:supervisor' %}" class="link-box" style="background: linear-gradient(45deg, #FFD700,rgb(228, 214, 158)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                                                      position: relative; font-size: 30px;">
@@ -204,7 +204,7 @@
         </a>
       </div>
       {% elif is_manager %}
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a href="{% url 'app:manager' %}" class="link-box" style="background: linear-gradient(45deg, #FFD700,rgb(219, 207, 159)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                                                      position: relative; font-size: 30px;">
@@ -213,7 +213,7 @@
         </a>
       </div>     
       {% else %}
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a class="link-box" style="background: linear-gradient(45deg, #FFD700,rgb(211, 199, 151)); 
                                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                   position: relative; font-size: 30px;">
@@ -224,8 +224,8 @@
       {% endif %}
     </div>
   </div>
-  
-  
+
+  <script defer src="https://static.getbutton.io/widget/bundle.js?id=plvX3"></script>  
 
 </body>
 </html>

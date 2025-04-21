@@ -1,0 +1,43 @@
+<!-- notifications.html -->
+
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Notifications{% endblock title %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white text-center py-3">
+                    <h3>Your Notifications</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for note in notifications %}
+                            <li class="list-group-item {% if not note.is_read %}list-group-item-warning{% endif %} border-0 rounded-3 mb-3 shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a href="{% url 'app:read_notification' note.id %}" class="text-decoration-none text-dark fw-bold">
+                                        {{ note.message }}
+                                    </a>
+                                    <small class="text-muted ms-2">{{ note.timestamp|naturaltime }}</small>
+                                </div>
+                                {% if not note.is_read %}
+                                    <div class="badge badge-pill bg-warning text-dark mt-2">Unread</div>
+                                {% endif %}
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item text-center text-muted">
+                                No notifications yet. Stay tuned!
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock content %}

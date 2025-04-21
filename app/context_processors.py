@@ -1,5 +1,5 @@
 from django.contrib.auth.models import Group
-from app.models import PTWForm, NHISForm
+from app.models import PTWForm, NHISForm, Notification
 
 def user_groups(request):
     # Ensure the user is authenticated before querying the database
@@ -36,6 +36,8 @@ def user_groups(request):
         is_manager = request.user.groups.filter(name="manager").exists()
         is_staff = request.user.groups.filter(name="staff").exists()
         is_vendor = request.user.groups.filter(name="vendor").exists()
+
+        unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     else:
         # For unauthenticated users, return default values
         approved_count = 0
@@ -56,6 +58,11 @@ def user_groups(request):
         pending_nhis = 0
         pending_ptw_manager = 0
         pending_nhis_manager = 0
+        unread_count = 0
+
+        
+        
+
 
     # Return the context dictionary
     return {
@@ -77,4 +84,5 @@ def user_groups(request):
         'pending_nhis': pending_nhis,
         'pending_ptw_manager': pending_ptw_manager,
         'pending_nhis_manager': pending_nhis_manager,
+        'unread_count': unread_count
     }

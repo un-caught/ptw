@@ -129,7 +129,7 @@ class NHISSubmissionForm(forms.ModelForm):
     location = forms.ChoiceField(choices=[
         ('HQ_Lekki', 'HQ - Lekki'),
         ('CGS_Ikorodu', 'CGS - Ikorodu'),
-        ('LNG_PH', 'LNG - PH'),
+        ('LNG_PH', 'LPG - PH'),
         ('LFZ_Ibeju', 'LFZ - Ibeju'),
     ], widget=forms.Select(attrs={'class': 'form-select'}))
     date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))

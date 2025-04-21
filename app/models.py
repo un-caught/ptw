@@ -197,3 +197,14 @@ class NHISForm(models.Model):
     def __str__(self):
         return self.name
 
+
+
+class Notification(models.Model):
+    recipient = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+    message = models.TextField(null=True)
+    link = models.URLField(blank=True, null=True)  # Link to the form, if needed
+    is_read = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"To {self.recipient.username} - {self.message[:30]}"

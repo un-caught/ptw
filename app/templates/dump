@@ -106,3 +106,274 @@ report lab
              <label for="hseqSign" class="form-label">33. Sign</label>
              {{ form.hseq_sign }}
          </div>
+
+
+
+
+
+
+
+         from io import BytesIO
+         import os
+         import matplotlib.pyplot as plt
+         import matplotlib
+         from reportlab.lib.pagesizes import letter
+         from reportlab.pdfgen import canvas
+         import tempfile
+         
+         # Ensure we use the Agg backend for matplotlib (headless rendering)
+         matplotlib.use('Agg')
+         
+         # Generate a pie chart and return it as a BytesIO object
+         def generate_pie_chart(data, labels, title, colors):
+             data = [d for d in data if d > 0]  # Only keep non-zero values
+             labels = [labels[i] for i in range(len(data))]  # Corresponding labels
+         
+             fig, ax = plt.subplots(figsize=(4, 4))  # Pie chart size
+             ax.pie(data, labels=labels, autopct='%1.1f%%', startangle=90, colors=colors, wedgeprops={'edgecolor': 'black'})
+             ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+         
+             # Save the pie chart to a temporary file in memory
+             img_buffer = BytesIO()
+             plt.savefig(img_buffer, format='PNG')
+             plt.close(fig)
+             img_buffer.seek(0)  # Reset the buffer position to the beginning
+             return img_buffer
+         
+         def generate_pdf(report_data, pie_chart_data_form_type, pie_chart_data_status):
+             buffer = BytesIO()
+             p = canvas.Canvas(buffer, pagesize=letter)
+         
+             # Title
+             p.setFont("Helvetica-Bold", 16)
+             p.drawString(200, 750, "Form Report")
+         
+             # Date Range
+             p.setFont("Helvetica", 12)
+             p.drawString(50, 730, f"Start Date: {report_data['start_date']}")
+             p.drawString(50, 710, f"End Date: {report_data['end_date']}")
+         
+             # Generate Pie Charts as images
+             # Form Type Distribution Pie Chart
+             form_type_data = [pie_chart_data_form_type.get('NHIS', 0), pie_chart_data_form_type.get('PTW', 0)]
+             form_type_labels = ['NHIS', 'PTW']
+             form_type_colors = ['#36A2EB', '#FFCE56']
+             form_type_img_buffer = generate_pie_chart(form_type_data, form_type_labels, "Form Type Distribution", form_type_colors)
+         
+             # Status Distribution Pie Chart
+             status_data = [pie_chart_data_status.get('approved', 0), pie_chart_data_status.get('disapproved', 0),
+                            pie_chart_data_status.get('awaiting_manager', 0), pie_chart_data_status.get('awaiting_supervisor', 0)]
+             status_labels = ['Approved', 'Disapproved', 'Awaiting Manager', 'Awaiting Supervisor']
+             status_colors = ['#4CAF50', '#d7290a', '#e9b77d', '#331f07']
+             status_img_buffer = generate_pie_chart(status_data, status_labels, "Status Distribution", status_colors)
+         
+             # NHIS Status Distribution Pie Chart
+             nhis_status_data = [pie_chart_data_status.get('open', 0), pie_chart_data_status.get('closed', 0), pie_chart_data_status.get('denied', 0)]
+             nhis_status_labels = ['Awaiting Manager', 'Awaiting Supervisor', 'Closed', 'Denied']
+             nhis_status_colors = ['#f48d0c', '#331f07', '#4CAF50', '#d7290a']
+             nhis_status_img_buffer = generate_pie_chart(nhis_status_data, nhis_status_labels, "NHIS Status Distribution", nhis_status_colors)
+         
+             # Save images from buffer to temporary files
+             temp_file_path_form_type = save_image_to_temp_file(form_type_img_buffer)
+             temp_file_path_status = save_image_to_temp_file(status_img_buffer)
+             temp_file_path_nhis_status = save_image_to_temp_file(nhis_status_img_buffer)
+         
+             # Position for images
+             y_position = 650
+         
+             # Insert the images into the PDF using temporary file paths
+             p.drawImage(temp_file_path_form_type, 50, y_position - 150, width=200, height=200)
+             p.drawImage(temp_file_path_status, 300, y_position - 150, width=200, height=200)
+             p.drawImage(temp_file_path_nhis_status, 50, y_position - 350, width=200, height=200)
+         
+             y_position -= 400  # Adjust for image placement
+         
+             # Report Data Table (Form Details)
+             p.setFont("Helvetica-Bold", 12)
+             p.drawString(50, y_position - 10, "Form Details:")
+             y_position -= 30
+         
+             # Table Headers
+             p.setFont("Helvetica-Bold", 10)
+             p.drawString(50, y_position, "Form Type")
+             p.drawString(150, y_position, "Form ID")
+             p.drawString(250, y_position, "Date Submitted")
+             p.drawString(350, y_position, "User")
+             p.drawString(450, y_position, "Location")
+             p.drawString(550, y_position, "Status")
+             y_position -= 20
+         
+             # Table Rows
+             p.setFont("Helvetica", 10)
+             for submission in report_data['report_data']:
+                 p.drawString(50, y_position, submission['form_type'])
+                 p.drawString(150, y_position, str(submission['form_id']))
+                 p.drawString(250, y_position, submission['date_submitted'])
+                 p.drawString(350, y_position, submission['user'])
+                 p.drawString(450, y_position, submission['location'])
+                 p.drawString(550, y_position, submission['status'])
+                 y_position -= 20
+         
+             p.showPage()
+             p.save()
+         
+             buffer.seek(0)
+             return buffer
+         
+         def save_image_to_temp_file(image_buffer):
+             # Save image buffer to a temporary file and return the file path
+             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
+             temp_file.write(image_buffer.getvalue())
+             temp_file.close()  # Close the file to ensure it's saved
+             return temp_file.name  # Return the file path
+         
+
+
+
+
+             if not report_data:
+             return HttpResponse('''
+                         <h1>There are no submissions made within specified</h1>
+                         <button onclick="window.history.back();">Go Back</button>
+                     ''')
+
+
+
+
+
+
+
+
+
+                     def supervisorDashboard(request):
+                     # Get the current year
+                     current_year = datetime.now().year
+                 
+                     # Define the list of all months
+                     all_months = [
+                         'January', 'February', 'March', 'April', 'May', 'June',
+                         'July', 'August', 'September', 'October', 'November', 'December'
+                     ]
+                     
+                     # Query PTW forms and group by month using 'date_submitted'
+                     ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year) \
+                                                        .annotate(month=TruncMonth('date_submitted')) \
+                                                        .values('month') \
+                                                        .annotate(count=Count('id')) \
+                                                        .order_by('month')
+                 
+                     # Initialize the counts for each month (start with zero)
+                     ptw_counts = [0] * 12
+                     ptw_months = all_months[:]  # Copy the list of all months
+                 
+                     # Map the month data from the query into the list
+                     for stat in ptw_monthly_stats:
+                         month_index = stat['month'].month - 1
+                         ptw_counts[month_index] = stat['count']
+                 
+                     # Query NHIS forms and group by month using 'date_submitted'
+                     nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year) \
+                                                          .annotate(month=TruncMonth('date_submitted')) \
+                                                          .values('month') \
+                                                          .annotate(count=Count('id')) \
+                                                          .order_by('month')
+                 
+                     # Initialize the counts for each month (start with zero)
+                     nhis_counts = [0] * 12
+                 
+                     # Map the month data from the query into the list
+                     for stat in nhis_monthly_stats:
+                         month_index = stat['month'].month - 1
+                         nhis_counts[month_index] = stat['count']
+                 
+                     # Create the combined bar chart for PTW and NHIS forms
+                     fig, ax = plt.subplots(figsize=(10, 6))  # Increase figure size for better visibility
+                     width = 0.35  # the width of the bars
+                 
+                     # Create positions for PTW and NHIS bars
+                     x = range(12)
+                 
+                     ax.bar(x, ptw_counts, width, label='PTW Forms', color='royalblue', edgecolor='black')
+                     ax.bar([p + width for p in x], nhis_counts, width, label='NHIS Forms', color='darkgreen', edgecolor='black')
+                     
+                     ax.set_xticks([p + width / 2 for p in x])
+                     ax.set_xticklabels(all_months, rotation=45, ha='right')  # Rotate month labels for readability
+                 
+                     # Beautify chart with gridlines, title, and axis labels
+                     ax.set_xlabel('Month', fontsize=14, fontweight='bold')
+                     ax.set_ylabel('Number of Forms', fontsize=14, fontweight='bold')
+                     ax.set_title(f'Monthly PTW and NHIS Form Submissions ({current_year})', fontsize=16, fontweight='bold')
+                 
+                     ax.legend(title='Form Types', fontsize=12)
+                     ax.yaxis.set_major_locator(MaxNLocator(integer=True))  # Ensure the y-axis is integer
+                 
+                     # Add gridlines for better readability
+                     ax.grid(True, linestyle='--', alpha=0.6)
+                 
+                     # Save the combined chart to a BytesIO object to embed in the template
+                     buffer = io.BytesIO()
+                     plt.tight_layout()  # Improve layout to avoid clipping of labels
+                     plt.savefig(buffer, format='png')
+                     buffer.seek(0)
+                     combined_chart_image = base64.b64encode(buffer.read()).decode()
+                 
+                     # Return the image in the template
+                     return render(request, 'supervisor.html', {
+                         'combined_chart': combined_chart_image,  # Combined chart
+                     })
+
+
+
+
+
+                     category = models.CharField(max_length=255, choices=[
+                     ('Access_Control', 'Access Control'),
+                     ('Account_Creation', 'Account Creation'),
+                     ('CCTV', 'CCTV'),
+                     ('Computer_Time', 'Computer Time'),
+                     ('CUG_Phone', 'CUG Phone Replacement'),
+                     ('CUG_SIM', 'CUG SIM Replacement'),
+                     ('Data_Loss', 'Data Loss'),
+                     ('Email', 'Email'),
+                     ('Email_Password', 'Email Password Reset'),
+                     ('Faults', 'Faults'),
+                     ('Hardwares', 'Hardwares'),
+                     ('Help', 'Help / Assistance'),
+                     ('Internet', 'Internet Access'),
+                     ('Laptop', 'Laptop Support'),
+                     ('Microsoft_Team', 'Microsoft Team Support'),
+                     ('Monitor', 'Monitor'),
+                     ('Mouse', 'Mouse'),
+                     ('Excel', 'MS Excel Support'),
+                     ('Network', 'Network Access'),
+                     ('Network_Password', 'Network Password Reset'),
+                     ('Office_Phone', 'Office Phone'),
+                     ('Office365', 'Office365 Support'),
+                     ('OS', 'Operating System Installation'),
+                     ('Print', 'Printer/Printing/Print'),
+                     ('Projector', 'Projector'),
+                     ('Scanning', 'Scanning Issues'),
+                     ('Service', 'Service Request'),
+                     ('Sharepoint', 'Sharepoint Support'),
+                     ('Software', 'Software'),
+                     ('Software_Installtion', 'Software Installtion'),
+                     ('Sound', 'Sound/Speakers'),
+                     ('Technical_Incident', 'Technical Incident'),
+                     ('Telephone', 'Telephone Related Issues'),
+                     ('USB', 'USB Access'),
+                     ('Video', 'Video Recording'),
+                     ('VPN', 'VPN Access'),
+                     ('Website', 'Website'),
+                     ('Wireless', 'Wireless'),
+                     ('Files', 'Working With Folders Or Files'),
+                 ], blank=True, null=True)
+
+
+                 
+    priority = models.CharField(max_length=255, choices=[
+    ('High', 'HIGH'),
+    ('Low', 'LOW'),
+    ('Medium', 'MEDIUM'),
+    ('Normal', 'NORMAL'),
+], blank=True, null=True)
+             

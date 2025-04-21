@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .forms import CreateUserForm, PTWSubmissionForm, NHISSubmissionForm
 from django.contrib.auth.models import Group, User
 from django.contrib.auth import authenticate, login, logout
-from .models import Member, PTWForm, NHISForm
+from .models import Member, PTWForm, NHISForm, Notification
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .decorators import allowed_users, unauthenticated_user
@@ -35,6 +35,13 @@ from matplotlib.ticker import MaxNLocator
 import matplotlib.dates as mdates
 import seaborn as sns
 
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.utils.html import format_html
+
+
+
 # Ensure we use the Agg backend for matplotlib (headless rendering)
 matplotlib.use('Agg')
 
@@ -61,30 +68,6 @@ def loginPage(request):
     return render(request, 'login.html')
 
 
-# @unauthenticated_user
-# def loginPage(request):
-#     if request.method == 'POST':
-#         username = request.POST.get('username')
-#         password = request.POST.get('password')
-
-#         user = authenticate(request, username=username, password=password)
-
-#         if user is not None:
-#             login(request, user)
-#             if user.groups.filter(name='manager').exists():
-#                 return redirect('manager')
-#             elif user.groups.filter(name='supervisor').exists():
-#                 return redirect('supervisor')
-#             elif user.groups.filter(name='staff').exists():
-#                 return redirect('client')
-#             elif user.groups.filter(name='vendor').exists():
-#                 return redirect('client')
-#             else:
-#                 messages.info(request, 'Username or Password is incorrect')
-
-#         else:
-#             messages.info(request, 'Username or Password is incorrect')
-#     return render(request, 'login.html')
 
 @login_required(login_url='app:login')
 def logoutUser(request):
@@ -136,9 +119,53 @@ def clientDashboard(request):
 
 
 
+
 @login_required(login_url='app:login')
 @allowed_users(allowed_roles=['supervisor'])
 def supervisorDashboard(request):
+
+    location_group_map = {
+        'supervisor_hq': 'HQ_Lekki',
+        'supervisor_cgs': 'CGS_Ikorodu',
+        'supervisor_lng': 'LNG_PH',
+        'supervisor_lfz': 'LFZ_Ibeju',
+    }
+
+    # Get the supervisor's group and determine their location
+    user_groups = request.user.groups.values_list('name', flat=True)
+    user_location = None
+    for group in user_groups:
+        if group in location_group_map:
+            user_location = location_group_map[group]
+            break
+
+    # Fallback: show no data if location isn't matched
+    if not user_location:
+        context = {
+            'total_ptw': 0,
+            'approved_ptw': 0,
+            'disapproved_ptw': 0,
+            'pending_ptw': 0,
+            'total_nhis': 0,
+            'closed_nhis': 0,
+            'denied_nhis': 0,
+            'pending_nhis': 0,
+            'combined_chart': None,
+        }
+        return render(request, 'supervisor.html', context)
+
+    # Query PTW forms filtered by the supervisor's location
+    total_ptw = PTWForm.objects.filter(location=user_location).count()
+    approved_ptw = PTWForm.objects.filter(location=user_location, status='approved').count()
+    disapproved_ptw = PTWForm.objects.filter(location=user_location, status='disapproved').count()
+    pending_ptw = PTWForm.objects.filter(location=user_location, status__in=['awaiting_supervisor', 'awaiting_manager']).count()
+
+    # Query NHIS forms filtered by the supervisor's location
+    total_nhis = NHISForm.objects.filter(location=user_location).count()
+    closed_nhis = NHISForm.objects.filter(location=user_location, status='closed').count()
+    denied_nhis = NHISForm.objects.filter(location=user_location, status='denied').count()
+    pending_nhis = NHISForm.objects.filter(location=user_location, status__in=['awaiting_supervisor', 'awaiting_manager']).count()
+
     # Get the current year
     current_year = datetime.now().year
 
@@ -147,9 +174,9 @@ def supervisorDashboard(request):
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ]
-    
-    # Query PTW forms and group by month using 'date_submitted'
-    ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year) \
+
+    # Query PTW forms grouped by month
+    ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year, location=user_location) \
                                        .annotate(month=TruncMonth('date_submitted')) \
                                        .values('month') \
                                        .annotate(count=Count('id')) \
@@ -164,8 +191,8 @@ def supervisorDashboard(request):
         month_index = stat['month'].month - 1
         ptw_counts[month_index] = stat['count']
 
-    # Query NHIS forms and group by month using 'date_submitted'
-    nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year) \
+    # Query NHIS forms grouped by month
+    nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year, location=user_location) \
                                          .annotate(month=TruncMonth('date_submitted')) \
                                          .values('month') \
                                          .annotate(count=Count('id')) \
@@ -191,7 +218,7 @@ def supervisorDashboard(request):
 
     # Use Seaborn color palettes
     ptw_color = sns.color_palette("Blues")[5]  # A nice shade of blue
-    nhis_color = sns.color_palette("Oranges")[4]  # A nice shade of green
+    nhis_color = sns.color_palette("Oranges")[4]  # A nice shade of orange
 
     ax.bar(x, ptw_counts, width, label='PTW Forms', color=ptw_color, edgecolor='black')
     ax.bar([p + width for p in x], nhis_counts, width, label='NHIS Forms', color=nhis_color, edgecolor='black')
@@ -217,127 +244,165 @@ def supervisorDashboard(request):
     buffer.seek(0)
     combined_chart_image = base64.b64encode(buffer.read()).decode()
 
-    # Return the image in the template
-    return render(request, 'supervisor.html', {
-        'combined_chart': combined_chart_image,  # Combined chart
-    })
+    # Return the context with the metrics and the combined chart
+    context = {
+        'total_ptw': total_ptw,
+        'approved_ptw': approved_ptw,
+        'disapproved_ptw': disapproved_ptw,
+        'pending_ptw': pending_ptw,
+        'total_nhis': total_nhis,
+        'closed_nhis': closed_nhis,
+        'denied_nhis': denied_nhis,
+        'pending_nhis': pending_nhis,
+        'combined_chart': combined_chart_image,  # Combined chart image
+    }
+
+    return render(request, 'supervisor.html', context)
+
 
 
 @login_required(login_url='app:login')
 @allowed_users(allowed_roles=['manager'])
 def managerDashboard(request):
-    # Get the current year
-    current_year = datetime.now().year
+    location_group_map = {
+        'manager_hq': 'HQ_Lekki',
+        'manager_cgs': 'CGS_Ikorodu',
+        'manager_lng': 'LNG_PH',
+        'manager_lfz': 'LFZ_Ibeju',
+    }
 
-    # Define the list of all months
+    # Get the manager's group and determine their location
+    user_groups = request.user.groups.values_list('name', flat=True)
+    user_location = None
+    for group in user_groups:
+        if group in location_group_map:
+            user_location = location_group_map[group]
+            break
+
+    # Fallback: show no data if location isn't matched
+    if not user_location:
+        context = {
+            'approved_ptw': 0,
+            'pending_ptw_manager': 0,
+            'closed_nhis': 0,
+            'pending_nhis_manager': 0,
+            'combined_chart': None,
+        }
+        return render(request, 'manager.html', context)
+
+    # Query PTW forms filtered by manager's location
+    approved_ptw = PTWForm.objects.filter(location=user_location, status='approved').count()
+    pending_ptw_manager = PTWForm.objects.filter(location=user_location, status='awaiting_manager').count()
+
+    # Query NHIS forms filtered by manager's location
+    closed_nhis = NHISForm.objects.filter(location=user_location, status='closed').count()
+    pending_nhis_manager = NHISForm.objects.filter(location=user_location, status='awaiting_manager').count()
+
+    # Get the current year and month list
+    current_year = datetime.now().year
     all_months = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ]
-    
-    # Define the statuses for PTW and NHIS forms
-    ptw_statuses = ['awaiting_manager', 'disapproved', 'approved']
-    nhis_statuses = ['awaiting_manager', 'closed', 'denied']
 
-    # Query PTW forms grouped by month and status
-    ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year) \
-                                       .values('status', 'date_submitted') \
-                                       .filter(status__in=ptw_statuses) \
+    # Query PTW forms grouped by month
+    ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year, location=user_location) \
                                        .annotate(month=TruncMonth('date_submitted')) \
+                                       .values('month') \
                                        .annotate(count=Count('id')) \
                                        .order_by('month')
 
-    # Initialize counts for each month (start with zero)
     ptw_counts = [0] * 12
-
-    # Sum the counts for each month across all statuses
     for stat in ptw_monthly_stats:
         month_index = stat['month'].month - 1
-        ptw_counts[month_index] += stat['count']
+        ptw_counts[month_index] = stat['count']
 
-    # Query NHIS forms grouped by month and status
-    nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year) \
-                                         .values('status', 'date_submitted') \
-                                         .filter(status__in=nhis_statuses) \
+    # Query NHIS forms grouped by month
+    nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year, location=user_location) \
                                          .annotate(month=TruncMonth('date_submitted')) \
+                                         .values('month') \
                                          .annotate(count=Count('id')) \
                                          .order_by('month')
 
-    # Initialize counts for each month (start with zero)
     nhis_counts = [0] * 12
-
-    # Sum the counts for each month across all statuses
     for stat in nhis_monthly_stats:
         month_index = stat['month'].month - 1
-        nhis_counts[month_index] += stat['count']
+        nhis_counts[month_index] = stat['count']
 
-    # Set Seaborn style
-    sns.set_theme(style="whitegrid")  # You can experiment with different themes like "darkgrid", "ticks", etc.
-    
-    # Create the combined bar chart for PTW and NHIS forms
-    fig, ax = plt.subplots(figsize=(14, 8))  # Increased figure size for better visibility
-    width = 0.35  # The width of the bars
-
-    # Create positions for PTW and NHIS bars
+    # Set Seaborn style and create chart
+    sns.set_theme(style="whitegrid")
+    fig, ax = plt.subplots(figsize=(11, 6))
+    width = 0.35
     x = range(12)
+    ptw_color = sns.color_palette("Blues")[5]
+    nhis_color = sns.color_palette("Oranges")[4]
 
-    # Define colors for PTW and NHIS forms
-    ptw_color = sns.color_palette("Blues")[5]  # A nice shade of blue
-    nhis_color = sns.color_palette("Oranges")[4]  # A nice shade of orange
-
-    # Plot PTW Form bars
     ax.bar(x, ptw_counts, width, label='PTW Forms', color=ptw_color, edgecolor='black')
-
-    # Plot NHIS Form bars (shifted to the right)
     ax.bar([p + width for p in x], nhis_counts, width, label='NHIS Forms', color=nhis_color, edgecolor='black')
 
     ax.set_xticks([p + width / 2 for p in x])
-    ax.set_xticklabels(all_months, rotation=45, ha='right')  # Rotate month labels for readability
-
-    # Beautify chart with gridlines, title, and axis labels
+    ax.set_xticklabels(all_months, rotation=45, ha='right')
     ax.set_xlabel('Month', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Total Number of Forms', fontsize=14, fontweight='bold')
+    ax.set_ylabel('Number of Forms', fontsize=14, fontweight='bold')
     ax.set_title(f'Monthly PTW and NHIS Form Submissions ({current_year})', fontsize=16, fontweight='bold')
-
     ax.legend(title='Form Types', fontsize=12)
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))  # Ensure the y-axis is integer
-
-    # Add gridlines for better readability
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax.grid(True, linestyle='--', alpha=0.6)
 
-    # Save the combined chart to a BytesIO object to embed in the template
     buffer = io.BytesIO()
-    plt.tight_layout()  # Improve layout to avoid clipping of labels
+    plt.tight_layout()
     plt.savefig(buffer, format='png', transparent=True)
     buffer.seek(0)
     combined_chart_image = base64.b64encode(buffer.read()).decode()
 
+    context = {
+        'approved_ptw': approved_ptw,
+        'pending_ptw_manager': pending_ptw_manager,
+        'closed_nhis': closed_nhis,
+        'pending_nhis_manager': pending_nhis_manager,
+        'combined_chart': combined_chart_image,
+    }
 
-    # Return the image in the template
-    return render(request, 'manager.html', {
-        'combined_chart': combined_chart_image,  # Combined chart
-    })
+    return render(request, 'manager.html', context)
 
 
 
+def send_mail_to_user_and_location_supervisors(user_email, subject, message_html, location):
+    
+    location_group_map = {
+        'supervisor_hq': 'HQ_Lekki',
+        'supervisor_cgs': 'CGS_Ikorodu',
+        'supervisor_lng': 'LNG_PH',
+        'supervisor_lfz': 'LFZ_Ibeju',
+    }
 
-def send_mail_to_user_and_supervisors(user_email, subject, message):
-    # Get the email addresses of users in the 'supervisor' group
-    supervisor_group = Group.objects.get(name='supervisor')
-    supervisor_emails = User.objects.filter(groups=supervisor_group).values_list('email', flat=True)
-
-    # Combine the user_email and supervisor emails into a single recipient list
-    recipient_list = [user_email] + list(supervisor_emails)  # Only send to the user and supervisors
-
-    # Send the email
-    send_mail(
-        subject,            # Subject of the email
-        message,            # Body of the email
-        settings.EMAIL_HOST_USER,  # From email (should be your configured email)
-        recipient_list,     # List of recipient emails
-        fail_silently=False  # If True, suppress exceptions (set to False for debugging)
+    supervisor_group_name = next(
+        (group_key for group_key, group_location in location_group_map.items()
+         if group_location == location and group_key.startswith('supervisor')), None
     )
 
+    if supervisor_group_name:
+        try:
+            supervisor_group = Group.objects.get(name=supervisor_group_name)
+            supervisor_emails = User.objects.filter(groups=supervisor_group).values_list('email', flat=True)
+        except Group.DoesNotExist:
+            supervisor_emails = []
+    else:
+        supervisor_emails = []
+
+    recipient_list = [user_email] + list(supervisor_emails)
+
+    # Strip HTML to create plain text version
+    text_content = strip_tags(message_html)
+
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=settings.EMAIL_HOST_USER,
+        to=recipient_list,
+    )
+    email.attach_alternative(message_html, "text/html")
+    email.send()
 
 
 
@@ -356,25 +421,41 @@ def create_ptw_form(request):
             submission.save()
 
             form.save_m2m()
+            notify_users_by_location(submission, form_type='PTW Form')
+
 
             # Construct the email message
-            subject = "New PTW Form Submission"
-            message = f"""
-            A user has submitted a PTW form.
+            subject = "🚧 New PTW Form Submission"
 
-            Details of the form:
-            -------------------
-            User: {request.user.get_full_name()} ({request.user.email})
-            Location: {submission.location}
-            Date Started: {submission.start_datetime}
-            Description: {submission.work_description}
+            message_html = f"""
+            <html>
+            <head></head>
+            <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+              <div style="max-width: 600px; margin: auto; background-color: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                <h2 style="color: #2c3e50;">🔔 PTW Form Submission Notification</h2>
+                <p>A new <strong>Permit to Work (PTW)</strong> form has been submitted. Here are the details:</p>
 
-            You can view the form details in the admin panel.
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                  <tr><td style="padding: 8px; border: 1px solid #ddd;">👤 <strong>User:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{request.user.get_full_name()} ({request.user.email})</td></tr>
+                  <tr><td style="padding: 8px; border: 1px solid #ddd;">📍 <strong>Location:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{submission.location}</td></tr>
+                  <tr><td style="padding: 8px; border: 1px solid #ddd;">📅 <strong>Date Started:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{submission.start_datetime.strftime('%Y-%m-%d %H:%M')}</td></tr>
+                  <tr><td style="padding: 8px; border: 1px solid #ddd;">📝 <strong>Description:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{submission.work_description}</td></tr>
+                </table>
+
+                <p style="margin-top: 20px;">🔗 You can view the full details in the <a href="{request.build_absolute_uri('/admin/')}" style="color: #3498db;">Admin Panel</a>.</p>
+
+                <p style="margin-top: 30px; font-size: 12px; color: #888;">This is an automated message. Please do not reply.</p>
+              </div>
+            </body>
+            </html>
             """
 
-            # Send the email to the signed-in user and supervisors
-            send_mail_to_user_and_supervisors(submission.user.email, subject, message)
-
+            send_mail_to_user_and_location_supervisors(
+                submission.user.email,
+                subject,
+                message_html,
+                submission.location
+            )
             return redirect('app:form_list')
 
         else:
@@ -391,22 +472,60 @@ def form_list(request):
     submissions = PTWForm.objects.none()
 
     if request.user.is_authenticated:
-        location_search = request.GET.get('location_search', '')
+        start_date_str = request.GET.get('start_date', '')
+        end_date_str = request.GET.get('end_date', '')
 
-        # Filter submissions based on the location search if provided
-        if location_search:
-            location_filter = PTWForm.objects.filter(location__icontains=location_search)
-        else:
-            location_filter = PTWForm.objects.all()
-        # Check user roles and filter submissions accordingly
+        start_date = None
+        end_date = None
+
+        try:
+            if start_date_str:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            if end_date_str:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        except ValueError:
+            pass
+
+        # All forms optionally filtered by search
+        all_forms = PTWForm.objects.all()
+
+        if start_date and end_date:
+            all_forms = all_forms.filter(date_submitted__range=(start_date, end_date))
+
+        # Staff: only see their own submissions
         if request.user.groups.filter(name='vendor').exists():
-            # Vendor can only see their own submissions
-            submissions = location_filter.filter(user=request.user)
-        elif request.user.groups.filter(name='manager').exists():
-            submissions = location_filter.filter(status__in=['awaiting_manager', 'approved', 'manager_signed'])
+            submissions = all_forms.filter(user=request.user)
 
-        elif request.user.groups.filter(name='supervisor').exists():
-            submissions = location_filter
+
+        else:
+            # Map groups to their allowed locations
+            location_group_map = {
+                'supervisor_hq': 'HQ_Lekki',
+                'supervisor_cgs': 'CGS_Ikorodu',
+                'supervisor_lng': 'LNG_PH',
+                'supervisor_lfz': 'LFZ_Ibeju',
+                'manager_hq': 'HQ_Lekki',
+                'manager_cgs': 'CGS_Ikorodu',
+                'manager_lng': 'LNG_PH',
+                'manager_lfz': 'LFZ_Ibeju',
+            }
+
+            # Loop through the user's groups to find matching access
+            user_groups = request.user.groups.values_list('name', flat=True)
+            for group in user_groups:
+                if group.startswith('supervisor'):
+                    allowed_location = location_group_map.get(group)
+                    if allowed_location:
+                        submissions = all_forms.filter(location=allowed_location)
+                        break
+                elif group.startswith('manager'):
+                    allowed_location = location_group_map.get(group)
+                    if allowed_location:
+                        submissions = all_forms.filter(
+                            location=allowed_location,
+                            status__in=['awaiting_manager', 'closed']
+                        )
+                        break
 
     return render(request, 'form_list.html', {
         'submissions': submissions,
@@ -504,10 +623,53 @@ def approve_manager(request, pk):
         submission.status = 'approved'
         submission.save()
 
-        subject = "PTW Form Approved"
-        message = f"Dear {submission.user.get_full_name()},\n\nYour PTW form located at '{submission.location}' has been approved by the manager.\n\nThank you."
 
-        send_mail_to_user_and_supervisors(submission.user.email, subject, message)
+        subject = "✅ PTW Form Approved"
+
+        # Styled HTML Email Content
+        message_html = f"""
+        <html>
+        <head></head>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+            <h2 style="color: #27ae60; font-size: 24px; text-align: center;">🎉 PTW Form Approved</h2>
+            <p style="color: #555; font-size: 16px;">Dear {submission.user.get_full_name()},</p>
+            
+            <p style="color: #555; font-size: 16px;">
+              We are pleased to inform you that your <strong>PTW (Permit To Work)</strong> form has been approved. Here are the details:
+            </p>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+              <tr><td style="padding: 12px; border: 1px solid #ddd; background-color: #f9f9f9;">📍 <strong>Location:</strong></td><td style="padding: 12px; border: 1px solid #ddd;">{submission.location}</td></tr>
+              <tr><td style="padding: 12px; border: 1px solid #ddd; background-color: #f9f9f9;">📅 <strong>Date Submitted:</strong></td><td style="padding: 12px; border: 1px solid #ddd;">{submission.start_datetime.strftime('%Y-%m-%d %H:%M')}</td></tr>
+              <tr><td style="padding: 12px; border: 1px solid #ddd; background-color: #f9f9f9;">📝 <strong>Work Description:</strong></td><td style="padding: 12px; border: 1px solid #ddd;">{submission.work_description}</td></tr>
+            </table>
+
+            <p style="color: #555; font-size: 16px; margin-top: 20px;">
+               The Permit to Work (PTW) form has been successfully reviewed and approved. Your safety and compliance are important to us, and this approval ensures that the necessary safety measures are in place for the task. Please proceed with the work according to the approved terms, and always prioritize safety.
+            </p>
+
+            <p style="margin-top: 30px; font-size: 12px; color: #888; text-align: center;">This is an automated message. Please do not reply.</p>
+          </div>
+        </body>
+        </html>
+        """
+
+        # Send the email to the user and supervisors based on the location
+        send_mail_to_user_and_location_supervisors(
+            submission.user.email,  # Send to the user's email
+            subject,  # Subject of the email
+            message_html,  # HTML content
+            submission.location  # Location for the supervisors
+        )
+
+
+        Notification.objects.create(
+            recipient=submission.user,
+            message=f"Your NHIS form has been approved. The form is now closed.",
+            link=f"/view_form/{submission.id}/"  # Link to view the form details
+        )
+
     return redirect('app:form_list')
 
 
@@ -535,28 +697,95 @@ def create_nhis_form(request):
 
             # Save the Many-to-Many relationship
             form.save_m2m()
+            notify_users_by_location(submission, form_type='NHIS Form')
 
+            subject = "🚧 New NHIR Form Submission"
 
-            subject = "New PTW Form Submission"
-            message = f"""
-            A user has submitted a NHIS form.
+            message_html = f"""
+            <html>
+            <head></head>
+            <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+              <div style="max-width: 600px; margin: auto; background-color: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                <h2 style="color: #2c3e50;">🔔 NHIR Form Submission Notification</h2>
+                <p>A new <strong>Near Hazard Incident Report (NHIR)</strong> form has been submitted. Here are the details:</p>
 
-            Details of the form:
-            -------------------
-            User: {request.user.get_full_name()} ({request.user.email})
-            Location: {submission.location}
-            Date Started: {submission.date}
-            Observation: {submission.observation}
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                  <tr><td style="padding: 8px; border: 1px solid #ddd;">👤 <strong>User:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{request.user.get_full_name()} ({request.user.email})</td></tr>
+                  <tr><td style="padding: 8px; border: 1px solid #ddd;">📍 <strong>Location:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{submission.location}</td></tr>
+                  <tr><td style="padding: 8px; border: 1px solid #ddd;">📅 <strong>Date Started:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{submission.date}</td></tr>
+                  <tr><td style="padding: 8px; border: 1px solid #ddd;">📝 <strong>Observation:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">{submission.observation}</td></tr>
+                </table>
 
-            You can view the form details in the admin panel.
+                <p style="margin-top: 20px;">🔗 You can view the full details in the System.</p>
+
+                <p style="margin-top: 30px; font-size: 12px; color: #888;">This is an automated message. Please do not reply.</p>
+              </div>
+            </body>
+            </html>
             """
 
-            # Send the email to the signed-in user and supervisors
-            send_mail_to_user_and_supervisors(submission.user.email, subject, message)
+            send_mail_to_user_and_location_supervisors(
+                submission.user.email,
+                subject,
+                message_html,
+                submission.location
+            )
+
             return redirect('app:nhis_list')
     else:
         form = NHISSubmissionForm()
     return render(request, 'nhis.html', {'form':form})
+
+
+def notify_users_by_location(form_submission, form_type='Form'):
+    location_group_map = {
+        'supervisor_hq': 'HQ_Lekki',
+        'supervisor_cgs': 'CGS_Ikorodu',
+        'supervisor_lng': 'LNG_PH',
+        'supervisor_lfz': 'LFZ_Ibeju',
+        'manager_hq': 'HQ_Lekki',
+        'manager_cgs': 'CGS_Ikorodu',
+        'manager_lng': 'LNG_PH',
+        'manager_lfz': 'LFZ_Ibeju',
+}
+
+    location = form_submission.location
+
+    for group_name, loc in location_group_map.items():
+        if loc == location:
+            try:
+                group = Group.objects.get(name=group_name)
+                for user in group.user_set.all():
+                    # Generate the correct link based on the form type
+                    if form_type == 'NHIS Form':
+                        link = f"/view_nhis_form/{form_submission.id}/"  # Correct link for NHIS forms
+                    elif form_type == 'PTW Form':
+                        link = f"/view_form/{form_submission.id}/"  # Correct link for PTW forms
+                    else:
+                        link = f"/view_form/{form_submission.id}/"  # Default link
+
+                    Notification.objects.create(
+                        recipient=user,
+                        message=f"New {form_type} submitted at {location}",
+                        link=link
+                    )
+            except Group.DoesNotExist:
+                continue
+
+
+
+@login_required
+def notifications_list(request):
+    notifications = Notification.objects.filter(recipient=request.user).order_by('-timestamp')
+    return render(request, 'notifications.html', {'notifications': notifications})
+
+@login_required
+def read_notification(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, recipient=request.user)
+    notification.is_read = True
+    notification.save()
+    return redirect(notification.link or 'dashboard')  # or wherever you want
+
 
 
 @login_required(login_url='app:login')
@@ -565,22 +794,59 @@ def nhis_list(request):
     submissions = NHISForm.objects.none()
 
     if request.user.is_authenticated:
-        location_search = request.GET.get('location_search', '')
+        start_date_str = request.GET.get('start_date', '')
+        end_date_str = request.GET.get('end_date', '')
 
-        # Filter submissions based on the location search if provided
-        if location_search:
-            location_filter = NHISForm.objects.filter(location__icontains=location_search)
-        else:
-            location_filter = NHISForm.objects.all()
-        # Check user roles and filter submissions accordingly
+        start_date = None
+        end_date = None
+
+        try:
+            if start_date_str:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            if end_date_str:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+        except ValueError:
+            pass
+
+        # All forms optionally filtered by search
+        all_forms = NHISForm.objects.all()
+        if start_date and end_date:
+            all_forms = all_forms.filter(date_submitted__range=(start_date, end_date))
+
+        # Staff: only see their own submissions
         if request.user.groups.filter(name='staff').exists():
-            # Vendor can only see their own submissions
-            submissions = location_filter.filter(user=request.user)
-        elif request.user.groups.filter(name='manager').exists():
-            submissions = location_filter.filter(status__in=['awaiting_manager', 'closed'])
+            submissions = all_forms.filter(user=request.user)
 
-        elif request.user.groups.filter(name='supervisor').exists():
-            submissions = location_filter
+        # Supervisor and Manager role-based location filtering
+        else:
+            # Map groups to their allowed locations
+            location_group_map = {
+                'supervisor_hq': 'HQ_Lekki',
+                'supervisor_cgs': 'CGS_Ikorodu',
+                'supervisor_lng': 'LNG_PH',
+                'supervisor_lfz': 'LFZ_Ibeju',
+                'manager_hq': 'HQ_Lekki',
+                'manager_cgs': 'CGS_Ikorodu',
+                'manager_lng': 'LNG_PH',
+                'manager_lfz': 'LFZ_Ibeju',
+            }
+
+            # Loop through the user's groups to find matching access
+            user_groups = request.user.groups.values_list('name', flat=True)
+            for group in user_groups:
+                if group.startswith('supervisor'):
+                    allowed_location = location_group_map.get(group)
+                    if allowed_location:
+                        submissions = all_forms.filter(location=allowed_location)
+                        break
+                elif group.startswith('manager'):
+                    allowed_location = location_group_map.get(group)
+                    if allowed_location:
+                        submissions = all_forms.filter(
+                            location=allowed_location,
+                            status__in=['awaiting_manager', 'closed']
+                        )
+                        break
 
     return render(request, 'nhis_list.html', {
         'submissions': submissions,
@@ -592,8 +858,54 @@ def nhis_list(request):
 def approve_nhis_supervisor(request, pk):
     submission = get_object_or_404(NHISForm, pk=pk)
     if submission.status == 'awaiting_supervisor':
-        submission.status = 'awaiting_manager'  # Change status to 'awaiting supervisor approval'
+        submission.status = 'closed'  # Change status to 'awaiting supervisor approval'
         submission.save()
+
+        subject = "✅ NHIR Form Approved"
+
+        # Styled HTML Email Content
+        message_html = f"""
+        <html>
+        <head></head>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+            <h2 style="color: #27ae60; font-size: 24px; text-align: center;">🎉 NHIR Form Approved</h2>
+            <p style="color: #555; font-size: 16px;">Dear {submission.user.get_full_name()},</p>
+            
+            <p style="color: #555; font-size: 16px;">
+              We are pleased to inform you that your <strong>NHIS (Near Hazard Incident Report)</strong> form has been approved. Here are the details:
+            </p>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+              <tr><td style="padding: 12px; border: 1px solid #ddd; background-color: #f9f9f9;">📍 <strong>Location:</strong></td><td style="padding: 12px; border: 1px solid #ddd;">{submission.location}</td></tr>
+              <tr><td style="padding: 12px; border: 1px solid #ddd; background-color: #f9f9f9;">📅 <strong>Date Submitted:</strong></td><td style="padding: 12px; border: 1px solid #ddd;">{submission.date}</td></tr>
+              <tr><td style="padding: 12px; border: 1px solid #ddd; background-color: #f9f9f9;">📝 <strong>Observation:</strong></td><td style="padding: 12px; border: 1px solid #ddd;">{submission.observation}</td></tr>
+            </table>
+
+            <p style="color: #555; font-size: 16px; margin-top: 20px;">
+              The form has been successfully processed, and we appreciate your attention to safety and hazard reporting.
+            </p>
+
+            <p style="margin-top: 30px; font-size: 12px; color: #888; text-align: center;">This is an automated message. Please do not reply.</p>
+          </div>
+        </body>
+        </html>
+        """
+
+        # Send the email to the user and supervisors based on the location
+        send_mail_to_user_and_location_supervisors(
+            submission.user.email,  # Send to the user's email
+            subject,  # Subject of the email
+            message_html,  # HTML content
+            submission.location  # Location for the supervisors
+        )
+
+
+        Notification.objects.create(
+            recipient=submission.user,
+            message=f"Your NHIS form has been approved. The form is now closed.",
+            link=f"/view_nhis_form/{submission.id}/"  # Link to view the form details
+        )
     return redirect('app:nhis_list')
 
 
@@ -703,11 +1015,33 @@ def form_report(request):
         'closed': 0,
         'denied': 0,
     }
+        # Location group map for access control
+    location_group_map = {
+        'supervisor_hq': 'HQ_Lekki',
+        'supervisor_cgs': 'CGS_Ikorodu',
+        'supervisor_lng': 'LNG_PH',
+        'supervisor_lfz': 'LFZ_Ibeju',
+        'manager_hq': 'HQ_Lekki',
+        'manager_cgs': 'CGS_Ikorodu',
+        'manager_lng': 'LNG_PH',
+        'manager_lfz': 'LFZ_Ibeju',
+    }
+
+    # Determine user's allowed location from group
+    user_groups = request.user.groups.values_list('name', flat=True)
+    user_location = None
+    for group in user_groups:
+        if group in location_group_map:
+            user_location = location_group_map[group]
+            break
+
 
     # If a valid date range is provided, filter and fetch the data
     if start_date or end_date:
         # Fetch NHIS form submissions within the date range
         nhis_submissions = NHISForm.objects.all()
+        if user_location:
+            nhis_submissions = nhis_submissions.filter(location=user_location)
         if start_date and end_date:
             nhis_submissions = nhis_submissions.filter(date_submitted__range=[start_date, end_date])
         elif start_date:
@@ -717,6 +1051,8 @@ def form_report(request):
 
         # Fetch PTW form submissions within the date range
         ptw_submissions = PTWForm.objects.all()
+        if user_location:
+            ptw_submissions = ptw_submissions.filter(location=user_location)
         if start_date and end_date:
             ptw_submissions = ptw_submissions.filter(date_submitted__range=[start_date, end_date])
         elif start_date:
@@ -951,3 +1287,4 @@ def save_image_to_temp_file(image_buffer):
     temp_file.write(image_buffer.getvalue())
     temp_file.close()  # Close the file to ensure it's saved
     return temp_file.name  # Return the file path
+

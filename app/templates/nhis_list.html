@@ -9,13 +9,27 @@
         <a href="{% url 'app:create_nhis' %}" class="btn btn-primary mb-3" >Create New NHIR Form</a>
         {% endif %}
 
-        <form method="get" class="mb-4">
-            <div class="input-group">
-                <input type="text" class="form-control" name="location_search" placeholder="Search by Location" value="{{ request.GET.location_search }}">
-                <button class="btn btn-secondary" type="submit">Search</button>
-            </div>
-        </form>
-
+        <div class="container mt-2 mb-4">
+            <form method="get" class="row g-3 align-items-end shadow-sm p-4  rounded border">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label fw-bold">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control"
+                           value="{{ request.GET.start_date }}">
+                </div>
+        
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label fw-bold">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control"
+                           value="{{ request.GET.end_date }}">
+                </div>
+        
+                <div class="col-md-4 text-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
     <div class="table-responsive">
         <table class="table table-bordered">
             <thead>

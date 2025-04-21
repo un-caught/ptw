@@ -34,5 +34,7 @@ urlpatterns = [
     path('form-report/', views.form_report, name='form_report'),
     path('view_nhis_form/<int:pk>/', views.view_nhis_form, name='view_nhis_form'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('notifications/', views.notifications_list, name='notifications'),
+    path('notifications/read/<int:notification_id>/', views.read_notification, name='read_notification'),
 
 ]

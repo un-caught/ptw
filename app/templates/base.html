@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erf - {% block title %}{% endblock title %}</title>
+    <title>FCL - {% block title %}{% endblock title %}</title>
     <link rel="icon" href="{% static 'img/favicon.png' %}" type="image/png">
     
     <!-- Bootstrap 5 CDN -->
@@ -170,8 +170,16 @@
                 <span class="user-name me-3">Welcome, {{request.user.first_name}} {{request.user.last_name}}</span>
                 
                 <!-- Notifications and Profile Links -->
-                {% comment %} <a class="nav-link" href="#" style="padding-right: 0.3rem;"><i class="fas fa-bell"></i> Notifications</a>
-                <a class="nav-link" href="#"><i class="fas fa-user"></i> Profile</a> {% endcomment %}
+                <a class="nav-link" href="{% url 'app:notifications' %}" style="padding-right: 0.3rem;">
+                    <i class="fas fa-bell"></i>
+                    {% if unread_count %}
+                      <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                        {{ unread_count }}
+                      </span>
+                    {% endif %} 
+                    Notifications                    
+                  </a>                  
+                {% comment %} <a class="nav-link" href="#"><i class="fas fa-user"></i> Profile</a> {% endcomment %}
             </div>
         </nav>
 
@@ -188,7 +196,7 @@
     <!-- AOS (Animate On Scroll) Library -->
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script defer src="https://static.getbutton.io/widget/bundle.js?id=plvX3"></script>
+    
     
 
 
