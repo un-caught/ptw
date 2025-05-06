@@ -1,12 +1,12 @@
 
 {% extends 'helpbase.html' %}
-{% block title %}Dashboard{% endblock title %}
+{% block title %}Admin Dashboard{% endblock title %}
 
 {% block content %}
 <div>
 <nav class="breadcrumb bg-light p-2  mt-2 mb-2" style="margin: 5px;">
     <a href="#" class="breadcrumb-item text-dark">Home</a> 
-    <span class="breadcrumb-item active">Dashboard</span>
+    <span class="breadcrumb-item active">Admin Dashboard</span>
 </nav>
 
 <div class="row pt-3">
@@ -14,7 +14,7 @@
         <div class="card" style="background: linear-gradient(to right,rgb(158, 228, 115), #74b749); color: white;">
             <div class="card-body">
                 <h5 class="card-title"><i class="fas fa-download text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> New Ticket(s)</h5>
-                <p class="card-text">0</p>
+                <p class="card-text">{{admin_tickets}}</p>
             </div>
         </div>
     </div>
@@ -22,15 +22,7 @@
         <div class="card" style="background: linear-gradient(to right,rgb(223, 113, 221), #9d4a9c); color: white;">
             <div class="card-body">
                 <h5 class="card-title"><i class="fas fa-eye text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> In Progress</h5>
-                <p class="card-text">0</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
-        <div class="card" style="background: linear-gradient(to right,rgb(247, 202, 97), #ffb400); color: white;">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-check-circle text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Resolved Issues</h5>
-                <p class="card-text">0</p>
+                <p class="card-text">{{admin_tickets_progress}}</p>
             </div>
         </div>
     </div>
@@ -38,29 +30,20 @@
         <div class="card" style="background: linear-gradient(to right,rgb(230, 145, 117), #f37b53); color: white;">
             <div class="card-body">
                 <h5 class="card-title"><i class="fas fa-times-circle text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Closed Ticket</h5>
-                <p class="card-text">0</p>
+                <p class="card-text">{{admin_tickets_closed}}</p>
             </div>
         </div>
     </div>
-</div>
-<div class="row pt-3">
     <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
         <div class="card" style="background: linear-gradient(to right,rgb(114, 111, 111), #434343); color: white;">
             <div class="card-body">
                 <h5 class="card-title"><i class="fas fa-mug-hot text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Closed By Complainant</h5>
-                <p class="card-text">0</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
-        <div class="card" style="background: linear-gradient(to right,rgb(91, 204, 230), #0daed3); color: white;">
-            <div class="card-body">
-                <h5 class="card-title"><i class="fas fa-coffee text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Closed By IT</h5>
-                <p class="card-text">0</p>
+                <p class="card-text">{{admin_tickets_cbc}}</p>
             </div>
         </div>
     </div>
 </div>
+
 
 </div>
 {% comment %} <head>

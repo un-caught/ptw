@@ -1,5 +1,5 @@
 {% extends 'helpbase.html' %}
-{% block title %}Dashboard{% endblock title %}
+{% block title %}IT Tickets{% endblock title %}
 
 {% block content %}
 
@@ -27,11 +27,11 @@
     <div class="form-wrapper">
         <div class="head text-white p-2 font-weight-bold mb-4" style="background-color: #74b749; margin-top: -20px; margin-left: -20px; margin-right: -20px;">
             <i class="fas fa-bars"></i>
-            List of My Tickets
+            List of Tickets
         </div>
 
         <!-- Form wrapper with border and border-radius -->
-        <form method="get" class="row g-3" action="{% url 'helpdesk:help_list' %}">
+        <form method="get" class="row g-3" action="{% url 'helpdesk:it_help_list' %}">
             <div class="form-row mb-4 d-flex align-items-center">
                 <div class="col-md-6" style="margin-right: 3px;">
                     <label for="startDate">SELECT DATE START FROM</label>
@@ -48,11 +48,13 @@
                     <select id="status" name="status" class="form-control" style="border-radius: 0px;">
                         <option value="">SELECT TICKET STATUS</option>
                         <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="Closed" {% if status == 'Closed' %}selected{% endif %}>Closed</option>
+                        <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="closed_by_complainant" {% if status == 'closed_by_complainant' %}selected{% endif %}>Closed By Complainant</option>
                     </select>
                 </div>
                 <div class="mt-3">
-                    <button type="submit" class="btn submit-btn" style="border-radius: 0px; margin-top: 7px; margin-left: 30px;">Generate Report</button>
+                    <button type="submit" class="btn submit-btn" style="border-radius: 0px; margin-top: 7px; margin-left: 30px;">Generate Report <i class="fas fa-print"></i></button>
                 </div>
             </div>
             
@@ -75,18 +77,34 @@
                     <th>Issues</th>
                     <th>Subject</th>
                     <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for submission in report_data %}
                     <tr>
-                        <td>{{ submission.form_id }}</td>
+                        <td>{{ submission.id }}</td>
                         <td>{{ submission.location }}</td>
                         <td>{{ submission.date_submitted }}</td>
+                        <td>
+                            {% if submission.user %}
+                                {{ submission.user.get_full_name|default:submission.user.username }}
+                            {% else %}
+                                Anonymous
+                            {% endif %}
+                        </td>
                         <td>{{ submission.complaint }}</td>
                         <td>{{ submission.issue }}</td>
                         <td>{{ submission.subject }}</td>
                         <td class="status {{ submission.status }}">{{ submission.status|capfirst }}</td>
+                        <td>
+                            {% if submission.status != "closed_by_complainant" %}
+                                <!-- View Button, now redirecting to the ticket details page -->
+                                <a href="{% url 'helpdesk:ticket_detail' pk=submission.form_id %}" class="btn btn-primary">
+                                    View
+                                </a>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

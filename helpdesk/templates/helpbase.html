@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erf - {% block title %}{% endblock title %}</title>
+    <title>FLC - {% block title %}{% endblock title %}</title>
     <link rel="icon" href="{% static 'img/favicon.png' %}" type="image/png">
     
     <!-- Bootstrap 5 CDN -->
@@ -57,7 +57,7 @@
             transition: margin-left 0.3s ease;
         }
         .top-navbar {
-            background-color:rgb(243, 105, 14);
+            background-color: #f3690e;
             color: white;
             padding: 10px 20px;
             border-radius: 15px;
@@ -125,118 +125,52 @@
         <div class="text-center text-white mb-4">
             <h3>Hello, {{request.user.first_name}}</h3>
         </div>
-        {% if is_staff %}
-            <a href="{% url 'helpdesk:home' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-            <div class="dropdown">
-                <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-ticket-alt"></i> Tickets
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item" href=""><i class="fas fa-plus-circle"></i> New Ticket</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-users"></i> Ticket for Others</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-list"></i> List of My Tickets</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-cogs"></i> Admin Dashboard</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-headset"></i> IT Support Tickets List</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-search"></i> Quick Search</a></li>
-                </ul>
-            </div>
-            <div class="dropdown">
-                <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-cogs"></i> Setup
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item" href=""><i class="fas fa-tasks"></i> Manage Priority</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-th-list"></i> Manage Categories</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-cogs"></i> Manage Issues</a></li>
-                </ul>
-            </div>
-            <div class="dropdown">
-                <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-chart-line"></i> Reports
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item" href=""><i class="fas fa-chart-pie"></i> View Reports</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-users"></i> Ticket Closed By</a></li>
-                </ul>
-            </div>
-            <a href=""><i class="fas fa-user-shield"></i> Access Right</a>
-            <a href="{% url 'app:dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
-        
-        {% elif is_vendor %}
+        {% if is_admin %}
         <a href="{% url 'helpdesk:home' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
         <div class="dropdown">
-            <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="#" class="dropdown-toggle text-white" id="dropdownTickets" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-ticket-alt"></i> Tickets
             </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <li><a class="dropdown-item" href=""><i class="fas fa-plus-circle"></i> New Ticket</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-users"></i> Ticket for Others</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-list"></i> List of My Tickets</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-cogs"></i> Admin Dashboard</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-headset"></i> IT Support Tickets List</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-search"></i> Quick Search</a></li>
+            <ul class="dropdown-menu" aria-labelledby="dropdownTickets">
+                <li><a class="dropdown-item" href="{% url 'helpdesk:new_ticket' %}"><i class="fas fa-plus-circle"></i> New Ticket</a></li>
+                <li><a class="dropdown-item" href="{% url 'helpdesk:ticket_others' %}"><i class="fas fa-users"></i> Ticket for Others</a></li>
+                <li><a class="dropdown-item" href="{% url 'helpdesk:help_list' %}"><i class="fas fa-list"></i> List of My Tickets</a></li>
+                <li><a class="dropdown-item" href="{% url 'helpdesk:admin_dash' %}"><i class="fas fa-cogs"></i> Admin Dashboard</a></li>
+                <li><a class="dropdown-item" href="{% url 'helpdesk:it_help_list' %}"><i class="fas fa-headset"></i> IT Support Tickets List</a></li>
             </ul>
         </div>
         <div class="dropdown">
-            <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="#" class="dropdown-toggle text-white" id="dropdownSetup" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-cogs"></i> Setup
             </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <li><a class="dropdown-item" href=""><i class="fas fa-tasks"></i> Manage Priority</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-th-list"></i> Manage Categories</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-cogs"></i> Manage Issues</a></li>
+            <ul class="dropdown-menu" aria-labelledby="dropdownSetup">
+                <li><a class="dropdown-item" href="{% url 'helpdesk:priority-list' %}"><i class="fas fa-tasks"></i> Manage Priority</a></li>
+                <li><a class="dropdown-item" href="{% url 'helpdesk:category-list' %}"><i class="fas fa-th-list"></i> Manage Categories</a></li>
             </ul>
         </div>
         <div class="dropdown">
-            <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+            <a href="#" class="dropdown-toggle text-white" id="dropdownReports" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-chart-line"></i> Reports
             </a>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <li><a class="dropdown-item" href=""><i class="fas fa-chart-pie"></i> View Reports</a></li>
-                <li><a class="dropdown-item" href=""><i class="fas fa-users"></i> Ticket Closed By</a></li>
+            <ul class="dropdown-menu" aria-labelledby="dropdownReports">
+                <li><a class="dropdown-item" href="{% url 'helpdesk:report_page' %}"><i class="fas fa-chart-pie"></i> View Reports</a></li>
             </ul>
         </div>
-        <a href=""><i class="fas fa-user-shield"></i> Access Right</a>
         <a href="{% url 'app:dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
 
-        {% else %}
-            {% if is_supervisor %}
-            <a href="{% url 'helpdesk:home' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-            <div class="dropdown">
-                <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-ticket-alt"></i> Tickets
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item" href="{% url 'helpdesk:new_ticket' %}"><i class="fas fa-plus-circle"></i> New Ticket</a></li>
-                    <li><a class="dropdown-item" href="{% url 'helpdesk:ticket_others' %}"><i class="fas fa-users"></i> Ticket for Others</a></li>
-                    <li><a class="dropdown-item" href="{% url 'helpdesk:help_list' %}"><i class="fas fa-list"></i> List of My Tickets</a></li>
-                    <li><a class="dropdown-item" href="{% url 'helpdesk:admin_dash' %}"><i class="fas fa-cogs"></i> Admin Dashboard</a></li>
-                    <li><a class="dropdown-item" href="{% url 'helpdesk:it_help_list' %}"><i class="fas fa-headset"></i> IT Support Tickets List</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-search"></i> Quick Search</a></li>
-                </ul>
-            </div>
-            <div class="dropdown">
-                <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-cogs"></i> Setup
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item" href="{% url 'helpdesk:priority-list' %}"><i class="fas fa-tasks"></i> Manage Priority</a></li>
-                    <li><a class="dropdown-item" href="{% url 'helpdesk:category-list' %}"><i class="fas fa-th-list"></i> Manage Categories</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-cogs"></i> Manage Issues</a></li>
-                </ul>
-            </div>
-            <div class="dropdown">
-                <a href="#" class="dropdown-toggle text-white" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-chart-line"></i> Reports
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <li><a class="dropdown-item" href=""><i class="fas fa-chart-pie"></i> View Reports</a></li>
-                    <li><a class="dropdown-item" href=""><i class="fas fa-users"></i> Ticket Closed By</a></li>
-                </ul>
-            </div>
-            <a href=""><i class="fas fa-user-shield"></i> Access Right</a>
-            <a href="{% url 'app:dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
-        {% endif %}
+        {% else%}
+        <a href="{% url 'helpdesk:home' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <div class="dropdown">
+            <a href="#" class="dropdown-toggle text-white" id="dropdownTickets" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ticket-alt"></i> Tickets
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="dropdownTickets">
+                <li><a class="dropdown-item" href="{% url 'helpdesk:new_ticket' %}"><i class="fas fa-plus-circle"></i> New Ticket</a></li>
+                <li><a class="dropdown-item" href="{% url 'helpdesk:help_list' %}"><i class="fas fa-list"></i> List of My Tickets</a></li>
+            </ul>
+        </div>
+        <a href="{% url 'app:dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
+
         {% endif %}
 
     </div>
@@ -251,11 +185,13 @@
                 <i class="fas fa-bars"></i>
             </button>
             {% if is_staff or is_vendor  %}
-                <a class="navbar-brand" href="{% url 'app:client' %}">Dashboard</a>
+                <a class="navbar-brand" href="{% url 'helpdesk:home' %}">Dashboard</a>
             {% elif is_supervisor %}
-                <a class="navbar-brand" href="{% url 'app:supervisor' %}">Supervisor Dashboard</a>
+                <a class="navbar-brand" href="{% url 'helpdesk:home' %}">Supervisor Dashboard</a>
+            {% elif admin %}
+                <a class="navbar-brand" href="{% url 'helpdesk:home' %}">Admin Dashboard</a>
             {% else %}
-                <a class="navbar-brand" href="{% url 'app:manager' %}">Manager Dashboard</a>
+                <a class="navbar-brand" href="{% url 'helpdesk:home' %}">Manager Dashboard</a>
             {% endif %}
             
 
@@ -271,6 +207,15 @@
             </div>
         </nav>
 
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         {% block content%}
 
 
@@ -284,7 +229,6 @@
     <!-- AOS (Animate On Scroll) Library -->
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script defer src="https://static.getbutton.io/widget/bundle.js?id=plvX3" ></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 
 

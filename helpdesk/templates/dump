@@ -1,0 +1,49 @@
+def help_list(request):
+    start_date = None
+    end_date = None
+    status = None
+
+    # Get the date range parameters from the request
+    if 'startDate' in request.GET and 'endDate' in request.GET:
+        start_date = request.GET.get('startDate')
+        end_date = request.GET.get('endDate')
+    
+    # Parse the dates if they exist
+    start_date = parse_date(start_date) if start_date else None
+    end_date = parse_date(end_date) if end_date else None
+    status = request.GET.get('status', None)
+
+    report_data = []
+
+    help_submissions = HELPForm.objects.all()
+
+    if start_date or end_date:
+        if start_date and end_date:
+            help_submissions = help_submissions.filter(date_submitted__range=[start_date, end_date])
+        elif start_date:
+            help_submissions = help_submissions.filter(date_submitted__gte=start_date)
+        elif end_date:
+            help_submissions = help_submissions.filter(date_submitted__lte=end_date)
+
+    if status:
+        help_submissions = help_submissions.filter(status=status)
+
+    # Process the filtered submissions
+    for submission in help_submissions:
+        report_data.append({
+            'form_id': submission.id,
+            'location': submission.location,
+            'date_submitted': submission.date_submitted.strftime('%Y-%m-%d'),
+            'complaint': submission.complaint,
+            'issue': submission.issue,
+            'subject': submission.subject,
+            'status': submission.status,
+        })
+
+    return render(request, 'list_ticket.html', {
+        'start_date': start_date,
+        'end_date': end_date,
+        'status': status,  # Add the selected status to the context
+        'total_help': len(help_submissions) if report_data else 0,
+        'report_data': report_data,
+    })

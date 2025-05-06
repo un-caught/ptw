@@ -1,0 +1,108 @@
+{% extends 'helpbase.html' %}
+{% block title %}Ticket Details{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="ticket-detail-wrapper">
+        <h3>Ticket Details - ID: {{ ticket.pk }}</h3>
+
+        <table class="table table-bordered">
+            <tr>
+                <th>Form ID:</th>
+                <td>{{ ticket.pk }}</td>
+            </tr>
+            <tr>
+                <th>Location:</th>
+                <td>{{ ticket.location }}</td>
+            </tr>
+            <tr>
+                <th>Date Submitted:</th>
+                <td>{{ ticket.date_submitted }}</td>
+            </tr>
+            <tr>
+                <th>Complainant:</th>
+                <td>{{ ticket.user.get_full_name }}</td>
+            </tr>
+            <tr>
+                <th>Complaint:</th>
+                <td>{{ ticket.complaint }}</td>
+            </tr>
+            <tr>
+                <th>Issues:</th>
+                <td>{{ ticket.issue }}</td>
+            </tr>
+            <tr>
+                <th>Subject:</th>
+                <td>{{ ticket.subject }}</td>
+            </tr>
+            <tr>
+                <th>Status:</th>
+                <td>{{ ticket.status }}</td>
+            </tr>
+            <tr>
+                <th>Admin Response:</th>
+                <td>
+                    {% if ticket.admin_response %}
+                        {{ ticket.admin_response }}<br>
+                        <small class="text-muted">Responded on: {{ ticket.response_timestamp }}</small>
+                    {% else %}
+                        No response yet.
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        
+        <div class="d-flex justify-content-between">
+            {% if is_admin %}
+                {% if ticket.status == "in_progress" %}
+                    <!-- Show "Back to Tickets", "Reply", and "Close Ticket" for in_progress status -->
+                    <a href="{% url 'helpdesk:it_help_list' %}" class="btn btn-success mb-3">Back to Tickets</a>
+                    {% if ticket.admin_response %}
+                        <!-- Show "Edit Response" if there is already a response -->
+                        <a href="{% url 'helpdesk:admin_reply_ticket' pk=ticket.pk %}" class="btn btn-warning">Edit Response</a>
+                    {% else %}
+                        <!-- Show "Reply" if no response has been made -->
+                        <a href="{% url 'helpdesk:admin_reply_ticket' pk=ticket.pk %}" class="btn btn-secondary">Reply</a>
+                    {% endif %}
+                    
+                {% elif ticket.rating %}
+                    <!-- Show only "Back to Tickets" if the ticket has been rated -->
+                    <a href="{% url 'helpdesk:it_help_list' %}" class="btn btn-success mb-3">Back to Tickets</a>
+
+                {% elif ticket.admin_response %}
+                    <!-- Show "Edit Response" and "Back to Tickets" if a response has been made -->
+                    <a href="{% url 'helpdesk:admin_reply_ticket' pk=ticket.pk %}" class="btn btn-warning">Edit Response</a>
+                    <a href="{% url 'helpdesk:it_help_list' %}" class="btn btn-success mb-3">Back to Tickets</a>
+
+
+                {% else %}
+                    <!-- If none of the above, just show "Reply" -->
+                    <a href="{% url 'helpdesk:it_help_list' %}" class="btn btn-success mb-3">Back to Tickets</a>
+                {% endif %}
+
+            {% else %}
+                {% if ticket.status == "pending" %}
+                    <!-- Show "Back to Tickets" and "Close Ticket" for pending status -->
+                    <a href="{% url 'helpdesk:help_list' %}" class="btn btn-success mb-3">Back to Tickets</a>
+                    <a href="{% url 'helpdesk:close_complainant' pk=ticket.pk %}" class="btn btn-danger">Close Ticket</a>
+
+                {% elif ticket.status == "in_progress" %}
+                    <!-- Show "Back to Tickets" and "Awaiting Response" for in_progress status -->
+                    <a href="{% url 'helpdesk:help_list' %}" class="btn btn-success mb-3">Back to Tickets</a>
+                    <p class="text-muted">Awaiting Response</p>
+
+                {% elif ticket.status == "closed_by_complainant" %}
+                    <!-- Show "Back to Tickets" and "Awaiting Response" for in_progress status -->
+                    <a href="{% url 'helpdesk:help_list' %}" class="btn btn-success mb-3">Back to Tickets</a>
+                    <p class="text-muted">Ticket has been closed by you</p>
+
+                {% elif ticket.admin_response %}
+                    <a href="{% url 'helpdesk:help_list' %}" class="btn btn-success mb-3">Back to Tickets</a>
+
+                {% endif %}
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock content %}

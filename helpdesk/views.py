@@ -7,7 +7,20 @@ from .models import HELPForm, Category, Priority
 from django.utils.dateparse import parse_date
 from datetime import datetime 
 from django.contrib import messages
-from .forms import CategoryForm, PriorityForm
+from .forms import CategoryForm, PriorityForm, AdminResponseForm, UserRatingForm
+from django.utils import timezone
+
+from django.db.models import Count
+
+import openpyxl
+from django.contrib.auth.decorators import login_required
+from openpyxl import Workbook
+
+import io
+import matplotlib.pyplot as plt
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Image
 # Create your views here.
 
 def home(request):
@@ -23,6 +36,7 @@ def create_help_form(request):
             submission.attachment = attachment
             submission.user = request.user
             submission.save()
+            messages.success(request, f"Ticket submitted successfully! Your reference ID is {submission.form_id}")
 
             form.save_m2m()
 
@@ -44,7 +58,7 @@ def create_help_form(request):
             # # Send the email to the signed-in user and supervisors
             # send_mail_to_user_and_supervisors(submission.user.email, subject, message)
 
-            return redirect('helpdesk:home')
+            return redirect('helpdesk:help_list')
 
         else:
             print(form.errors)
@@ -90,13 +104,14 @@ def help_list(request):
     for submission in help_submissions:
         report_data.append({
             'form_id': submission.id,
+            'id': submission.form_id,
             'location': submission.location,
             'date_submitted': submission.date_submitted.strftime('%Y-%m-%d'),
             'complaint': submission.complaint,
             'issue': submission.issue,
             'subject': submission.subject,
             'status': submission.status,
-            'complainant_full_name': submission.user.get_full_name()
+            'user': submission.user,
         })
 
     return render(request, 'list_ticket.html', {
@@ -204,6 +219,7 @@ def ticket_others(request):
             user_id = request.POST.get('user')  # Assuming 'user' is the name of the field in the form
             submission.user = User.objects.get(id=user_id)
             submission.save()
+            messages.success(request, f"Ticket submitted successfully! Your reference ID is {submission.form_id}")
 
             form.save_m2m()
 
@@ -225,7 +241,7 @@ def ticket_others(request):
             # # Send the email to the signed-in user and supervisors
             # send_mail_to_user_and_supervisors(submission.user.email, subject, message)
 
-            return redirect('helpdesk:home')
+            return redirect('helpdesk:it_help_list')
 
         else:
             print(form.errors)
@@ -271,12 +287,14 @@ def it_help_list(request):
     for submission in help_submissions:
         report_data.append({
             'form_id': submission.id,
+            'id': submission.form_id,
             'location': submission.location,
             'date_submitted': submission.date_submitted.strftime('%Y-%m-%d'),
             'complaint': submission.complaint,
             'issue': submission.issue,
             'subject': submission.subject,
             'status': submission.status,
+            'user': submission.user,  
         })
 
     return render(request, 'it_list_ticket.html', {
@@ -291,3 +309,274 @@ def it_help_list(request):
 def admin_dash(request):
     
     return render(request, 'admin_dash.html', )
+
+
+def ticket_detail(request, pk):
+    # Fetch the ticket by form_id
+    ticket = get_object_or_404(HELPForm, pk=pk)
+
+    if request.user.groups.filter(name='admin').exists(): 
+        if ticket.status == 'pending':
+            ticket.status = 'in_progress'
+            ticket.save()
+
+    # Render the template and pass the ticket details to it
+    return render(request, 'ticket_detail.html', {'ticket': ticket})
+
+
+
+def close_complainant(request, pk):
+    submission = get_object_or_404(HELPForm, pk=pk)
+
+    if request.user.groups.filter(name='admin').exists(): 
+        submission.status = 'closed' 
+        submission.save()
+        return redirect('helpdesk:it_help_list')
+    else:
+        submission.status = 'closed_by_complainant'
+        submission.save()  
+    return redirect('helpdesk:help_list')
+
+
+
+def admin_reply_ticket(request, pk):
+    ticket = get_object_or_404(HELPForm, pk=pk)
+    
+    # If the user is an admin, allow them to respond
+    if request.user.is_staff:
+        if request.method == "POST":
+            form = AdminResponseForm(request.POST, instance=ticket)
+            if form.is_valid():
+                response = form.save(commit=False)
+                response.status = 'resolved'  # set status to resolved
+                response.save()
+                messages.success(request, 'Response saved successfully.')
+                return redirect('helpdesk:it_help_list')
+        else:
+            form = AdminResponseForm(instance=ticket)
+        
+        return render(request, 'admin_reply_ticket.html', {'form': form, 'ticket': ticket})
+
+    else:
+        messages.error(request, 'You do not have permission to respond to this ticket.')
+        return redirect('helpdesk:it_help_list')
+
+
+def rate_ticket_response(request, pk):
+    ticket = get_object_or_404(HELPForm, pk=pk)
+
+    # Check if the user is the one who submitted the ticket
+    if ticket.user != request.user:
+        messages.error(request, 'You are not authorized to rate this ticket.')
+        return redirect('helpdesk:help_list')  # Or redirect to the list of tickets
+
+    # If ticket is resolved or closed, allow the user to rate it
+    if ticket.status in ['resolved', 'closed']:
+        if request.method == 'POST':
+            form = UserRatingForm(request.POST, instance=ticket)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Thank you for your feedback!')
+                return redirect('helpdesk:ticket_detail', pk=ticket.pk)
+        else:
+            form = UserRatingForm(instance=ticket)
+
+        return render(request, 'rate_ticket.html', {'form': form, 'ticket': ticket})
+    else:
+        messages.error(request, 'You cannot rate a ticket that is still in progress.')
+        return redirect('helpdesk:help_list')
+
+
+
+def report_page(request):
+    start_date = request.GET.get('startDate')
+    end_date = request.GET.get('endDate')
+    status = request.GET.get('status')
+
+    # Parse and normalize dates
+    start_date = parse_date(start_date) if start_date else None
+    end_date = parse_date(end_date) if end_date else None
+
+    if start_date:
+        start_date = datetime.combine(start_date, datetime.min.time())
+    if end_date:
+        end_date = datetime.combine(end_date, datetime.max.time())
+    
+
+    # Start with all forms
+    help_submissions = HELPForm.objects.all()
+
+    # Filter by date range
+    if start_date and end_date:
+        help_submissions = help_submissions.filter(date_submitted__range=(start_date, end_date))
+    elif start_date:
+        help_submissions = help_submissions.filter(date_submitted__gte=start_date)
+    elif end_date:
+        help_submissions = help_submissions.filter(date_submitted__lte=end_date)
+
+    if status:
+        help_submissions = help_submissions.filter(status=status)
+
+    # Get the report data
+    report_data = [{
+        'form_id': submission.form_id,
+        'location': submission.location,
+        'date_submitted': submission.date_submitted.strftime('%Y-%m-%d'),
+        'complaint': submission.complaint,
+        'priority': submission.priority.name,  # Assuming Priority has a 'name' field
+        'status': submission.status,
+    } for submission in help_submissions]
+
+    # Get the count of each priority and status for pie chart
+    priority_counts = help_submissions.values('priority__name').annotate(count=Count('priority')).order_by('priority__name')
+    status_counts = help_submissions.values('status').annotate(count=Count('status')).order_by('status')
+
+    # Prepare the data for the chart
+    priority_labels = [item['priority__name'] for item in priority_counts]
+    priority_values = [item['count'] for item in priority_counts]
+    status_labels = [item['status'] for item in status_counts]
+    status_values = [item['count'] for item in status_counts]
+
+    if 'export' in request.GET:
+        return export_to_excel(request, help_submissions)
+
+    if 'download_pdf' in request.GET:
+        if not help_submissions.exists():
+            return HttpResponse('<h1>No data available in selected date range.</h1>')
+        return export_to_pdf(request, help_submissions)
+
+    return render(request, 'report_page.html', {
+        'start_date': start_date.date() if start_date else '',
+        'end_date': end_date.date() if end_date else '',
+        'status': status,
+        'report_data': report_data,
+        'priority_labels': priority_labels,
+        'priority_values': priority_values,
+        'status_labels': status_labels,
+        'status_values': status_values,
+    })
+
+
+
+@login_required
+def export_to_excel(request, help_submissions):
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Ticket Report'
+
+    headers = [
+        'S/N', 'Ticket ID', 'Location', 'Date Submitted', 'Time Submitted',
+        'Date Resolved', 'Time Resolved', 'Complainant Name', 'Subject',
+        'Category', 'Priority', 'Reply', 'Status', 'Duration'
+    ]
+    worksheet.append(headers)
+
+    for sn, submission in enumerate(help_submissions, start=1):
+        date_submitted = submission.date_submitted.strftime('%Y-%m-%d')
+        time_submitted = submission.date_submitted.strftime('%H:%M:%S')
+
+        date_resolved = submission.response_timestamp.strftime('%Y-%m-%d') if submission.response_timestamp else ""
+        time_resolved = submission.response_timestamp.strftime('%H:%M:%S') if submission.response_timestamp else ""
+
+        complainant_name = submission.user.get_full_name() if submission.user else "Anonymous"
+
+        duration = ""
+        if submission.date_submitted and submission.response_timestamp:
+            delta = submission.response_timestamp - submission.date_submitted
+            hours, remainder = divmod(delta.total_seconds(), 3600)
+            minutes, _ = divmod(remainder, 60)
+            duration = f"{int(hours)} hours {int(minutes)} minutes"
+
+        row = [
+            sn,
+            submission.form_id,
+            submission.location,
+            date_submitted,
+            time_submitted,
+            date_resolved,
+            time_resolved,
+            complainant_name,
+            submission.subject,
+            submission.category.name if submission.category else "",
+            submission.priority.name if submission.priority else "",
+            submission.admin_response,
+            submission.status,
+            duration
+        ]
+        worksheet.append(row)
+
+    # Get dates from request to use in the filename
+    start_date = request.GET.get('startDate')
+    end_date = request.GET.get('endDate')
+
+    # Fallbacks if dates aren't present
+    start_str = start_date if start_date else 'Start'
+    end_str = end_date if end_date else 'Today'
+
+    # Format for file-safe naming (optional: replace spaces or special characters)
+    status_label = request.GET.get('status') or 'All Statuses'
+    filename = f"List Of Tickets From {start_str} To {end_str} - {status_label}.xlsx"
+    filename = filename.replace(" ", "_")  # Optional: make it filesystem friendly
+
+    response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    workbook.save(response)
+    return response
+
+
+def export_to_pdf(request, help_submissions):
+    # Count priority and status
+    priority_counts = help_submissions.values('priority__name').annotate(count=Count('priority')).order_by('priority__name')
+    status_counts = help_submissions.values('status').annotate(count=Count('status')).order_by('status')
+
+    priority_labels = [item['priority__name'] for item in priority_counts]
+    priority_values = [item['count'] for item in priority_counts]
+
+    status_labels = [item['status'] for item in status_counts]
+    status_values = [item['count'] for item in status_counts]
+
+    # Priority pie chart
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.pie(priority_values, labels=priority_labels, autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')
+    priority_img = io.BytesIO()
+    plt.savefig(priority_img, format='png')
+    plt.close(fig)
+    priority_img.seek(0)
+
+    # Status pie chart
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.pie(status_values, labels=status_labels, autopct='%1.1f%%', startangle=90)
+    ax.axis('equal')
+    status_img = io.BytesIO()
+    plt.savefig(status_img, format='png')
+    plt.close(fig)
+    status_img.seek(0)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="ticket_report.pdf"'
+
+    pdf = canvas.Canvas(response, pagesize=letter)
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(100, 750, "HELP Ticket Report - Priority and Status Distribution")
+
+    # Draw Priority Chart
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(100, 700, "Priority Distribution:")
+    img = Image(priority_img)
+    img.drawHeight = 300
+    img.drawWidth = 400
+    img.wrapOn(pdf, 400, 300)
+    img.drawOn(pdf, 100, 400)
+
+    # Draw Status Chart
+    pdf.drawString(100, 380, "Status Distribution:")
+    img = Image(status_img)
+    img.drawHeight = 300
+    img.drawWidth = 400
+    img.wrapOn(pdf, 400, 300)
+    img.drawOn(pdf, 100, 80)
+
+    pdf.showPage()
+    pdf.save()
+    return response

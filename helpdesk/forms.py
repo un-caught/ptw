@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django import forms
 from .models import HELPForm, Category, Priority
 from django.forms.widgets import ClearableFileInput
+from django.utils import timezone
+
 
 class HELPSubmissionForm(forms.ModelForm):
     class Meta:
@@ -53,3 +55,29 @@ class PriorityForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter priority level'}),
         }
+
+class AdminResponseForm(forms.ModelForm):
+    class Meta:
+        model = HELPForm
+        fields = ['admin_response']
+
+    # Optionally, set default timestamp
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.response_timestamp = timezone.now()
+        if commit:
+            instance.save()
+        return instance
+
+
+class UserRatingForm(forms.ModelForm):
+    class Meta:
+        model = HELPForm
+        fields = ['rating']
+        
+    # Optional: Customize validation to ensure rating is within the range
+    def clean_rating(self):
+        rating = self.cleaned_data.get('rating')
+        if rating and not (1 <= rating <= 5):
+            raise forms.ValidationError('Rating must be between 1 and 5')
+        return rating

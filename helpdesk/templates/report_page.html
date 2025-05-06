@@ -1,0 +1,116 @@
+{% extends 'helpbase.html' %}
+
+{% block title %}Report{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <form method="get" action="{% url 'helpdesk:report_page' %}" class="p-4 bg-light rounded shadow-sm">
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <label for="startDate" class="form-label">Start Date</label>
+                <input type="date" id="startDate" name="startDate" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="endDate" class="form-label">End Date</label>
+                <input type="date" id="endDate" name="endDate" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label for="status" class="form-label">Status</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="">-- All Statuses --</option>
+                    <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="closed_by_complainant" {% if status == 'closed_by_complainant' %}selected{% endif %}>Closed By Complainant</option>
+                    <!-- Add any other statuses your model supports -->
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-warning w-100"><i class="fas fa-file-alt"></i> Generate Report</button>
+            </div>
+            <div class="col-md-4">
+                <button name="export" type="submit" class="btn btn-success w-100"><i class="fas fa-file-excel"></i> Export to Excel</button>
+            </div>
+            <div class="col-md-4">
+                <button name="download_pdf" type="submit" class="btn btn-danger w-100"><i class="fas fa-file-pdf"></i> Export to PDF</button>
+            </div>
+        </div>
+    </form>
+    
+
+    {% if report_data %}
+        <h3 class="my-4">Tickets Report</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Form ID</th>
+                    <th>Location</th>
+                    <th>Date Submitted</th>
+                    <th>Complaint</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in report_data %}
+                    <tr>
+                        <td>{{ submission.form_id }}</td>
+                        <td>{{ submission.location }}</td>
+                        <td>{{ submission.date_submitted }}</td>
+                        <td>{{ submission.complaint }}</td>
+                        <td>{{ submission.priority }}</td>
+                        <td>{{ submission.status }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No tickets found in this date range.</p>
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Priority Distribution</h4>
+            <canvas id="priorityChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <h4>Status Distribution</h4>
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Pie chart for priority distribution
+    var ctx1 = document.getElementById('priorityChart').getContext('2d');
+    var priorityChart = new Chart(ctx1, {
+        type: 'pie',
+        data: {
+            labels: {{ priority_labels|safe }},
+            datasets: [{
+                label: 'Priority Distribution',
+                data: {{ priority_values|safe }},
+                backgroundColor: ['#74b749', '#ff6600', '#dc5d3a', '#3498db'],  // You can customize colors here
+            }]
+        }
+    });
+
+    // Pie chart for status distribution
+    var ctx2 = document.getElementById('statusChart').getContext('2d');
+    var statusChart = new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: {{ status_labels|safe }},
+            datasets: [{
+                label: 'Status Distribution',
+                data: {{ status_values|safe }},
+                backgroundColor: ['#3498db', '#f1c40f', '#e74c3c', '#2ecc71'],  // Customize status colors
+            }]
+        }
+    });
+</script>
+{% endblock %}

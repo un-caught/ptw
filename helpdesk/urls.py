@@ -18,4 +18,11 @@ urlpatterns = [
     path('priority/<int:pk>/delete/', views.priority_delete, name='priority-delete'),
     path('ticket-others/', views.ticket_others, name='ticket_others'),
     path('admin-dashboard/', views.admin_dash, name='admin_dash'),
+    path('ticket/<int:pk>/', views.ticket_detail, name='ticket_detail'),
+    path('close_complainant/<int:pk>/', views.close_complainant, name='close_complainant'),
+    path('ticket/rate/<int:pk>/', views.rate_ticket_response, name='rate_ticket_response'),
+    path('ticket/reply/<int:pk>/', views.admin_reply_ticket, name='admin_reply_ticket'),
+    path('report/', views.report_page, name='report_page'),
+    path('export/excel/', views.export_to_excel, name='export_to_excel'),
+    path('export/pdf/', views.export_to_pdf, name='export_to_pdf'),
 ]
