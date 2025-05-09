@@ -24,7 +24,7 @@ class HELPForm(models.Model):
     location = models.CharField(max_length=255, choices=[
         ('HQ_Lekki', 'HQ Lekki'),
         ('CGS_Ikorodu', 'CGS Ikorodu'),
-        ('LNG_PH', 'LNG PH'),
+        ('LPG_PH', 'LPG PH'),
         ('LFZ_Ibeju', 'LFZ Ibeju'),
     ], blank=True, null=True)
 

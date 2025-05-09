@@ -13,7 +13,7 @@ class HELPSubmissionForm(forms.ModelForm):
     location = forms.ChoiceField(choices=[
         ('HQ_Lekki', 'HQ - Lekki'),
         ('CGS_Ikorodu', 'CGS - Ikorodu'),
-        ('LNG_PH', 'LNG - PH'),
+        ('LPG_PH', 'LPG - PH'),
         ('LFZ_Ibeju', 'LFZ - Ibeju'),
     ], widget=forms.Select(attrs={'class': 'form-select'}))   
 

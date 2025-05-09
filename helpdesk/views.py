@@ -9,6 +9,8 @@ from datetime import datetime
 from django.contrib import messages
 from .forms import CategoryForm, PriorityForm, AdminResponseForm, UserRatingForm
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 
 from django.db.models import Count
 
@@ -21,12 +23,18 @@ import matplotlib.pyplot as plt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Image
+
+from django.core.mail import EmailMessage
+from django.utils.html import strip_tags
+from .decorators import allowed_users
 # Create your views here.
 
+@login_required(login_url='app:login')
 def home(request):
     
     return render(request, 'index.html', )
 
+@login_required(login_url='app:login')
 def create_help_form(request):
     if request.method == 'POST':
         form = HELPSubmissionForm(request.POST, request.FILES)
@@ -40,23 +48,97 @@ def create_help_form(request):
 
             form.save_m2m()
 
-            # # Construct the email message
-            # subject = "New PTW Form Submission"
-            # message = f"""
-            # A user has submitted a PTW form.
+            # Get admin group emails
+            admin_group = Group.objects.get(name="admin")
+            admin_emails = list(admin_group.user_set.values_list('email', flat=True))
+            recipients = admin_emails + [request.user.email]
 
-            # Details of the form:
-            # -------------------
-            # User: {request.user.get_full_name()} ({request.user.email})
-            # Location: {submission.location}
-            # Date Started: {submission.start_datetime}
-            # Description: {submission.work_description}
+            # Construct the inline HTML email
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{
+                        font-family: Arial, sans-serif;
+                        background-color: #f9f9f9;
+                        padding: 20px;
+                        color: #333;
+                    }}
+                    .container {{
+                        background-color: #ffffff;
+                        border-radius: 8px;
+                        padding: 20px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                    }}
+                    h2 {{
+                        color: #007bff;
+                        margin-bottom: 20px;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                    }}
+                    th, td {{
+                        text-align: left;
+                        padding: 8px;
+                        vertical-align: top;
+                    }}
+                    th {{
+                        width: 150px;
+                        color: #555;
+                    }}
+                    .footer {{
+                        margin-top: 30px;
+                        font-size: 12px;
+                        color: #888;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>New Help Ticket Submitted</h2>
+                    <p><strong>{request.user.get_full_name()}</strong> ({request.user.email}) has submitted a new help ticket.</p>
 
-            # You can view the form details in the admin panel.
-            # """
+                    <table>
+                        <tr>
+                            <th>Reference ID:</th>
+                            <td>{submission.form_id}</td>
+                        </tr>
+                        <tr>
+                            <th>Location:</th>
+                            <td>{submission.location}</td>
+                        </tr>
+                        <tr>
+                            <th>Date Started:</th>
+                            <td>{submission.date_submitted.strftime('%Y-%m-%d')}</td>
+                        </tr>
+                        <tr>
+                            <th>Subject:</th>
+                            <td>{submission.subject}</td>
+                        </tr>
+                    </table>
 
-            # # Send the email to the signed-in user and supervisors
-            # send_mail_to_user_and_supervisors(submission.user.email, subject, message)
+                    <p class="footer">
+                        This is an automated message. You can view this ticket in the admin panel.
+                    </p>
+                </div>
+            </body>
+            </html>
+            """
+
+            # Strip tags for plain text fallback
+            plain_text = strip_tags(html_content)
+
+            email = EmailMessage(
+                subject="New HELP Ticket Submitted",
+                body=plain_text,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=recipients,
+            )
+            email.content_subtype = "html"
+            email.body = html_content
+            email.send(fail_silently=False)
 
             return redirect('helpdesk:help_list')
 
@@ -69,7 +151,7 @@ def create_help_form(request):
     return render(request, 'new_ticket.html', context)
 
 
-
+@login_required(login_url='app:login')
 def help_list(request):
     start_date = None
     end_date = None
@@ -124,11 +206,15 @@ def help_list(request):
 
 
 # View to list all categories
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'category_list.html', {'categories': categories})
 
 # View to create a new category
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def category_create(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -141,6 +227,8 @@ def category_create(request):
     
     return render(request, 'category_form.html', {'form': form})
 
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def category_edit(request, pk):
     category = get_object_or_404(Category, pk=pk)
 
@@ -156,6 +244,8 @@ def category_edit(request, pk):
 
 
 # View to delete a category
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def category_delete(request, pk):
     category = get_object_or_404(Category, pk=pk)
     if request.method == 'POST':
@@ -166,11 +256,15 @@ def category_delete(request, pk):
 
 
 # View to list all priority
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def priority_list(request):
     priority = Priority.objects.all()
     return render(request, 'priority_list.html', {'priority': priority})
 
 # View to create a new priority
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def priority_create(request):
     if request.method == 'POST':
         form = PriorityForm(request.POST)
@@ -183,6 +277,8 @@ def priority_create(request):
     
     return render(request, 'priority_form.html', {'form': form})
 
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def priority_edit(request, pk):
     priority = get_object_or_404(Priority, pk=pk)
 
@@ -198,6 +294,8 @@ def priority_edit(request, pk):
 
 
 # View to delete a priority
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def priority_delete(request, pk):
     priority = get_object_or_404(Priority, pk=pk)
     if request.method == 'POST':
@@ -207,7 +305,8 @@ def priority_delete(request, pk):
     return render(request, 'priority_confirm_delete.html', {'priority': priority})
 
 
-
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def ticket_others(request):
     users = User.objects.all()
     if request.method == 'POST':
@@ -222,24 +321,96 @@ def ticket_others(request):
             messages.success(request, f"Ticket submitted successfully! Your reference ID is {submission.form_id}")
 
             form.save_m2m()
+            admin_group = Group.objects.get(name="admin")
+            admin_emails = list(admin_group.user_set.values_list('email', flat=True))
+            recipients = admin_emails + [submission.user.email]
 
-            # # Construct the email message
-            # subject = "New PTW Form Submission"
-            # message = f"""
-            # A user has submitted a PTW form.
+            # Construct the inline HTML email
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{
+                        font-family: Arial, sans-serif;
+                        background-color: #f9f9f9;
+                        padding: 20px;
+                        color: #333;
+                    }}
+                    .container {{
+                        background-color: #ffffff;
+                        border-radius: 8px;
+                        padding: 20px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                    }}
+                    h2 {{
+                        color: #007bff;
+                        margin-bottom: 20px;
+                    }}
+                    table {{
+                        width: 100%;
+                        border-collapse: collapse;
+                    }}
+                    th, td {{
+                        text-align: left;
+                        padding: 8px;
+                        vertical-align: top;
+                    }}
+                    th {{
+                        width: 150px;
+                        color: #555;
+                    }}
+                    .footer {{
+                        margin-top: 30px;
+                        font-size: 12px;
+                        color: #888;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>New Help Ticket Submitted</h2>
+                    <p><strong>{submission.user.get_full_name()}</strong> ({submission.user.email}) has submitted a new help ticket.</p>
 
-            # Details of the form:
-            # -------------------
-            # User: {request.user.get_full_name()} ({request.user.email})
-            # Location: {submission.location}
-            # Date Started: {submission.start_datetime}
-            # Description: {submission.work_description}
+                    <table>
+                        <tr>
+                            <th>Reference ID:</th>
+                            <td>{submission.form_id}</td>
+                        </tr>
+                        <tr>
+                            <th>Location:</th>
+                            <td>{submission.location}</td>
+                        </tr>
+                        <tr>
+                            <th>Date Started:</th>
+                            <td>{submission.date_submitted.strftime('%Y-%m-%d')}</td>
+                        </tr>
+                        <tr>
+                            <th>Subject:</th>
+                            <td>{submission.subject}</td>
+                        </tr>
+                    </table>
 
-            # You can view the form details in the admin panel.
-            # """
+                    <p class="footer">
+                        This is an automated message. You can view this ticket in the admin panel.
+                    </p>
+                </div>
+            </body>
+            </html>
+            """
 
-            # # Send the email to the signed-in user and supervisors
-            # send_mail_to_user_and_supervisors(submission.user.email, subject, message)
+            # Strip tags for plain text fallback
+            plain_text = strip_tags(html_content)
+
+            email = EmailMessage(
+                subject="New HELP Ticket Submitted",
+                body=plain_text,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=recipients,
+            )
+            email.content_subtype = "html"
+            email.body = html_content
+            email.send(fail_silently=False)
 
             return redirect('helpdesk:it_help_list')
 
@@ -253,6 +424,8 @@ def ticket_others(request):
     return render(request, 'ticket_others.html', context)
 
 
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def it_help_list(request):
     start_date = None
     end_date = None
@@ -305,12 +478,14 @@ def it_help_list(request):
         'report_data': report_data,
     })
 
-
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def admin_dash(request):
     
     return render(request, 'admin_dash.html', )
 
 
+@login_required(login_url='app:login')
 def ticket_detail(request, pk):
     # Fetch the ticket by form_id
     ticket = get_object_or_404(HELPForm, pk=pk)
@@ -325,6 +500,7 @@ def ticket_detail(request, pk):
 
 
 
+@login_required(login_url='app:login')
 def close_complainant(request, pk):
     submission = get_object_or_404(HELPForm, pk=pk)
 
@@ -338,7 +514,8 @@ def close_complainant(request, pk):
     return redirect('helpdesk:help_list')
 
 
-
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def admin_reply_ticket(request, pk):
     ticket = get_object_or_404(HELPForm, pk=pk)
     
@@ -351,6 +528,96 @@ def admin_reply_ticket(request, pk):
                 response.status = 'resolved'  # set status to resolved
                 response.save()
                 messages.success(request, 'Response saved successfully.')
+
+                recipients = [response.user.email]
+
+                # Construct the inline HTML email
+                html_content = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            font-family: Arial, sans-serif;
+                            background-color: #f9f9f9;
+                            padding: 20px;
+                            color: #333;
+                        }}
+                        .container {{
+                            background-color: #ffffff;
+                            border-radius: 8px;
+                            padding: 20px;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                        }}
+                        h2 {{
+                            color: #007bff;
+                            margin-bottom: 20px;
+                        }}
+                        table {{
+                            width: 100%;
+                            border-collapse: collapse;
+                        }}
+                        th, td {{
+                            text-align: left;
+                            padding: 8px;
+                            vertical-align: top;
+                        }}
+                        th {{
+                            width: 150px;
+                            color: #555;
+                        }}
+                        .footer {{
+                            margin-top: 30px;
+                            font-size: 12px;
+                            color: #888;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h2>Your Ticket Has Been Resolved</h2>
+                        <p><strong>{response.user.get_full_name()}</strong> ({response.user.email}), your ticket has been resolved.</p>
+
+                        <table>
+                            <tr>
+                                <th>Reference ID:</th>
+                                <td>{response.form_id}</td>
+                            </tr>
+                            <tr>
+                                <th>Location:</th>
+                                <td>{response.location}</td>
+                            </tr>
+                            <tr>
+                                <th>Date Started:</th>
+                                <td>{response.date_submitted.strftime('%Y-%m-%d')}</td>
+                            </tr>
+                            <tr>
+                                <th>Subject:</th>
+                                <td>{response.subject}</td>
+                            </tr>
+                        </table>
+
+                        <p class="footer">
+                            This is an automated message. You can view this ticket in the admin panel.
+                        </p>
+                    </div>
+                </body>
+                </html>
+                """
+
+                # Strip tags for plain text fallback
+                plain_text = strip_tags(html_content)
+
+                email = EmailMessage(
+                    subject="HELP Ticket Resolved",
+                    body=plain_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=recipients,
+                )
+                email.content_subtype = "html"
+                email.body = html_content
+                email.send(fail_silently=False)
+
                 return redirect('helpdesk:it_help_list')
         else:
             form = AdminResponseForm(instance=ticket)
@@ -361,7 +628,7 @@ def admin_reply_ticket(request, pk):
         messages.error(request, 'You do not have permission to respond to this ticket.')
         return redirect('helpdesk:it_help_list')
 
-
+@login_required(login_url='app:login')
 def rate_ticket_response(request, pk):
     ticket = get_object_or_404(HELPForm, pk=pk)
 
@@ -387,7 +654,8 @@ def rate_ticket_response(request, pk):
         return redirect('helpdesk:help_list')
 
 
-
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def report_page(request):
     start_date = request.GET.get('startDate')
     end_date = request.GET.get('endDate')
@@ -458,7 +726,8 @@ def report_page(request):
 
 
 
-@login_required
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def export_to_excel(request, help_submissions):
     workbook = Workbook()
     worksheet = workbook.active
@@ -523,7 +792,8 @@ def export_to_excel(request, help_submissions):
     workbook.save(response)
     return response
 
-
+@login_required(login_url='app:login')
+@allowed_users(allowed_roles=['admin'])
 def export_to_pdf(request, help_submissions):
     # Count priority and status
     priority_counts = help_submissions.values('priority__name').annotate(count=Count('priority')).order_by('priority__name')
