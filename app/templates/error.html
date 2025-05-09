@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+    }
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 4px;
+    }
+    </style>
+
+{% block content %}
+<div class="error-container">
+    <h2>Error Occurred</h2>
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    <a href="{% url 'app:chat' %}" class="btn btn-primary">Back to Chat</a>
+</div>
+{% endblock %}

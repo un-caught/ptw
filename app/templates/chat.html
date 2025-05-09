@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .chat-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .chat-history {
+        height: 60vh;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .message {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    
+    .user-message {
+        background-color: #e3f2fd;
+        margin-left: 20%;
+    }
+    
+    .bot-message {
+        background-color: #f5f5f5;
+        margin-right: 20%;
+    }
+    
+    .chat-form {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .chat-form input[type="text"] {
+        flex-grow: 1;
+        padding: 10px;
+    }
+</style>
+
+<div class="chat-container">
+    <div class="chat-history">
+        {% for chat in chat_history %}
+        <div class="message user-message">
+            <strong>You:</strong> {{ chat.message }}
+        </div>
+        <div class="message bot-message">
+            <strong>Bot:</strong> {{ chat.response }}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <form method="post" class="chat-form">
+        {% csrf_token %}
+        {{ form.message }}
+        <button type="submit">Send</button>
+    </form>
+</div>
+{% endblock %}

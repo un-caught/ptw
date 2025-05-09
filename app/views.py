@@ -40,6 +40,12 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils.html import format_html
 
+from reportlab.lib import colors
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Image
 
 
 # Ensure we use the Agg backend for matplotlib (headless rendering)
@@ -589,6 +595,10 @@ def view_form(request, pk):
     attachment_ext = os.path.splitext(submission.attachment.name)[1].lower()
     project_attachment_ext = os.path.splitext(submission.project_attachment.name)[1].lower()
 
+    if request.method == 'POST':
+        return generate_ptw_pdf(submission)
+    
+
     # Pass the form submission to the template for rendering
     return render(request, 'view_form.html', {'submission': submission, 'attachment_ext': attachment_ext, 'project_attachment_ext': project_attachment_ext})
 
@@ -931,7 +941,7 @@ def approve_nhis_manager(request, pk):
         subject = "NHIS Form Approved"
         message = f"Dear {submission.user.get_full_name()},\n\nYour NHIS form located at '{submission.location}', \n\n Dated  '{submission.date}' has been approved by the manager.\n\nThank you."
 
-        send_mail_to_user_and_supervisors(submission.user.email, subject, message)
+        send_mail_to_user_and_location_supervisors(submission.user.email, subject, message)
     return redirect('app:nhis_list')
 
 
@@ -979,6 +989,10 @@ def delete_nhis_form(request, pk):
 def view_nhis_form(request, pk):
     # Get the form submission by its primary key (pk)
     submission = get_object_or_404(NHISForm, pk=pk)
+
+    if request.method == 'POST':
+        # Example: Generate a PDF when the form is submitted (button click)
+        return generate_pdf(submission)
 
     # Pass the form submission to the template for rendering
     return render(request, 'view_nhis_form.html', {'submission': submission})
@@ -1288,3 +1302,284 @@ def save_image_to_temp_file(image_buffer):
     temp_file.close()  # Close the file to ensure it's saved
     return temp_file.name  # Return the file path
 
+
+def generate_pdf(submission):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=60, bottomMargin=40)
+    elements = []
+
+    # Styles
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='Heading', fontSize=16, leading=20, spaceAfter=10, fontName="Helvetica-Bold"))
+    styles.add(ParagraphStyle(name='SubHeading', fontSize=12, leading=16, spaceAfter=8, fontName="Helvetica-Bold"))
+    styles.add(ParagraphStyle(name='NormalBold', fontSize=10, fontName="Helvetica-Bold"))
+    normal_style = styles["Normal"]
+
+    # ✅ Add the logo
+    # logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'falcon.png')
+
+    # if os.path.exists(logo_path):
+    #     logo = Image(logo_path, width=120, height=60)
+    #     logo.hAlign = 'RIGHT'
+    #     elements.append(logo)
+    #     elements.append(Spacer(1, 10))
+
+    styles.add(ParagraphStyle(
+        name='FalconHeader',
+        fontSize=12,
+        leading=14,
+        fontName='Helvetica-Bold',
+        textColor=colors.HexColor('#ff6600'),
+    ))
+
+    styles.add(ParagraphStyle(
+        name='FormSubHeader',
+        fontSize=10,
+        leading=12,
+        fontName='Helvetica-Bold',
+        textColor=colors.black,
+    ))
+
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'falex.png')
+
+    # Create the left-hand text
+    # header_text = Paragraph("FALCON CORPORATION LIMITED<br/>NHIR FORMS", styles["NormalBold"])
+
+    header_text = Paragraph(
+        '<font color="#ff6600">FALCON CORPORATION LIMITED</font><br/><font color="black">NHIR FORMS</font>',
+        styles["Normal"]
+    )
+
+    # Load the logo if it exists
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=100, height=60)  # Adjust size as needed
+    else:
+        logo = Paragraph("Logo Missing", styles["Normal"])
+
+    # Create a table with two cells: [text on left, logo on right]
+    header_table = Table(
+        [[header_text, logo]],
+        colWidths=[350, 150],  # adjust width to your layout needs
+        hAlign='LEFT'
+    )
+
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+
+    elements.append(header_table)
+    elements.append(Spacer(1, 20))
+
+
+    # Title
+    elements.append(Paragraph(f"NHIR Form Submission Details", styles["Heading"]))
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph(f"<b>Form ID:</b> {submission.id}", normal_style))
+    elements.append(Paragraph(f"<b>Date Submitted:</b> {submission.date_submitted}", normal_style))
+    if submission.user:
+        elements.append(Paragraph(f"<b>User:</b> {submission.user.get_full_name()}", normal_style))
+    elements.append(Paragraph(f"<b>Location:</b> {submission.location}", normal_style))
+    elements.append(Paragraph(f"<b>Status:</b> {submission.status}", normal_style))
+    elements.append(Spacer(1, 12))
+
+    # Section Header
+    elements.append(Paragraph("Details", styles["SubHeading"]))
+
+    # Form fields to display
+    details = [
+        ("Date", submission.date),
+        ("Hazard Identification", ", ".join([str(item) for item in submission.hazard.all()])),
+        ("Risk Type", submission.risk_type),
+        ("RAM Rating", submission.ram_rating),
+        ("Description Of Observations", submission.observation),
+        ("Immediate Action Taken", submission.action_taken),
+        ("Further Action To Prevent Recurrence", submission.preventive_action),
+        ("Responsible Action Party", submission.responsible_party),
+        ("Target Date/Time", submission.target_date),
+        ("Observed By", submission.observed_by),
+        ("Department", submission.dept),
+        ("Date/Time Observed", submission.observed_date)
+    ]
+
+    # Create a table for details
+    table_data = []
+    for label, value in details:
+        display_value = str(value) if value else "-"
+        table_data.append([
+            Paragraph(f"<b>{label}</b>", normal_style),
+            Paragraph(display_value, normal_style)
+        ])
+
+    table = Table(table_data, colWidths=[2.2 * inch, 4.5 * inch])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
+        ('BOX', (0, 0), (-1, -1), 0.75, colors.grey),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+    ]))
+
+    elements.append(table)
+
+    # Build the PDF
+    doc.build(elements)
+
+    # Return PDF as HTTP response
+    pdf = buffer.getvalue()
+    buffer.close()
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="nhis_form_submission_{submission.id}.pdf"'
+    response.write(pdf)
+    return response
+
+
+def generate_ptw_pdf(submission):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=60, bottomMargin=40)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='Heading', fontSize=16, leading=20, spaceAfter=10, fontName="Helvetica-Bold"))
+    styles.add(ParagraphStyle(name='SubHeading', fontSize=12, leading=16, spaceAfter=8, fontName="Helvetica-Bold"))
+    styles.add(ParagraphStyle(name='NormalBold', fontSize=10, fontName="Helvetica-Bold"))
+    normal = styles["Normal"]
+
+    def add_kv(label, value):
+        val = ", ".join([str(v) for v in value.all()]) if hasattr(value, 'all') else str(value or "-")
+        return [Paragraph(f"<b>{label}</b>", normal), Paragraph(val, normal)]
+
+    # ✅ Add the logo
+    # logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'falcon.png')
+
+    # if os.path.exists(logo_path):
+    #     logo = Image(logo_path, width=120, height=60)
+    #     logo.hAlign = 'RIGHT'
+    #     elements.append(logo)
+    #     elements.append(Spacer(1, 10))
+    # Add or update styles
+    styles.add(ParagraphStyle(
+        name='FalconHeader',
+        fontSize=12,
+        leading=14,
+        fontName='Helvetica-Bold',
+        textColor=colors.HexColor('#ff6600'),
+    ))
+
+    styles.add(ParagraphStyle(
+        name='FormSubHeader',
+        fontSize=10,
+        leading=12,
+        fontName='Helvetica-Bold',
+        textColor=colors.black,
+    ))
+
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'falex.png')
+
+    # Create the left-hand text
+    # header_text = Paragraph("FALCON CORPORATION LIMITED<br/>PTW FORMS", styles["NormalBold"])
+
+    header_text = Paragraph(
+        '<font color="#ff6600">FALCON CORPORATION LIMITED</font><br/><font color="black">PTW FORMS</font>',
+        styles["Normal"]
+    )
+
+    # Load the logo if it exists
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=100, height=60)  # Adjust size as needed
+    else:
+        logo = Paragraph("Logo Missing", styles["Normal"])
+
+    # Create a table with two cells: [text on left, logo on right]
+    header_table = Table(
+        [[header_text, logo]],
+        colWidths=[350, 150],  # adjust width to your layout needs
+        hAlign='LEFT'
+    )
+
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+
+    elements.append(header_table)
+    elements.append(Spacer(1, 20))
+
+    # Header
+    elements.append(Paragraph("PTW Form Submission Details", styles["Heading"]))
+    elements += [
+        Paragraph(f"<b>Form ID:</b> {submission.id}", normal),
+        Paragraph(f"<b>Date Submitted:</b> {submission.date_submitted}", normal),
+        Paragraph(f"<b>User:</b> {submission.user.get_full_name()}", normal),
+        Paragraph(f"<b>Location:</b> {submission.location}", normal),
+        Paragraph(f"<b>Status:</b> {submission.status}", normal),
+        Spacer(1, 12),
+    ]
+
+    elements.append(Paragraph("Form Details", styles["SubHeading"]))
+
+    table_data = [
+        add_kv("Work Description", submission.work_description),
+        add_kv("Equipment/Tools/Materials", submission.equipment_tools_materials),
+        add_kv("Risk Assessment", submission.risk_assessment_done),
+        add_kv("Start Date/Time", submission.start_datetime),
+        add_kv("Duration", submission.duration),
+        add_kv("Days", submission.days),
+        add_kv("Number of Workers", submission.workers_count),
+        add_kv("Department", submission.department),
+        add_kv("Contractor", submission.contractor),
+        add_kv("Contractor Supervisor", submission.contractor_supervisor),
+        add_kv("Work Place", submission.work_place),
+        add_kv("Work Location Isolated By", submission.work_location_isolation),
+        add_kv("Personal Safety Equipment", submission.personal_safety),
+        add_kv("Additional Precautions", submission.additional_precautions),
+        add_kv("Supervisor", submission.supervisor_name),
+        add_kv("Applicant Name", submission.applicant_name),
+        add_kv("Applicant Date", submission.applicant_date),
+        add_kv("Applicant Signature", submission.applicant_sign),
+        add_kv("Facility Manager Name", submission.facility_manager_name),
+        add_kv("Facility Manager Date", submission.facility_manager_date),
+        add_kv("Facility Manager Signature", submission.facility_manager_sign),
+        add_kv("Certificates Required", submission.certificates_required),
+        add_kv("Valid From", submission.valid_from),
+        add_kv("Valid To", submission.valid_to),
+        add_kv("Initials", submission.initials),
+        add_kv("Contractor Name", submission.contractor_name),
+        add_kv("Contractor Date", submission.contractor_date),
+        add_kv("Contractor Signature", submission.contractor_sign),
+        add_kv("HSEQ Name", submission.hseq_name),
+        add_kv("HSEQ Date", submission.hseq_date),
+        add_kv("HSEQ Signature", submission.hseq_sign),
+    ]
+
+    # Optional fields
+    if hasattr(submission, 'additional_field') and submission.additional_field:
+        table_data.append(add_kv("Additional Field", submission.additional_field))
+
+    # Table formatting
+    table = Table(table_data, colWidths=[2.3 * inch, 4.4 * inch])
+    table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.75, colors.grey),
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.lightgrey),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+
+    elements.append(table)
+
+    # Build and return PDF
+    doc.build(elements)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="ptw_form_submission_{submission.id}.pdf"'
+    response.write(pdf)
+    return response

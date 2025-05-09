@@ -79,8 +79,12 @@
             </tbody>
         </table>
 
-        <div class="mt-4">
-            <a href="{% url 'app:nhis_list' %}" class="btn btn-secondary">Back to Report</a>
+        <div class="mt-4 d-flex gap-2">
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Download as PDF</button>
+            </form>
+            <a href="{% url 'app:nhis_list' %}" class="btn btn-secondary mb-4">Back to Report</a>
         </div>
     </div>
 </div>
