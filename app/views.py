@@ -396,7 +396,16 @@ def send_mail_to_user_and_location_supervisors(user_email, subject, message_html
     else:
         supervisor_emails = []
 
-    recipient_list = [user_email] + list(supervisor_emails)
+    # recipient_list = [user_email] + list(supervisor_emails)
+
+    if user_email:
+    # Combine the user's email with the supervisor emails
+        recipient_list = [user_email] + [email for email in supervisor_emails if email != user_email]
+    else:
+        recipient_list = list(supervisor_emails)
+
+    # Print or log recipient_list to verify
+    print("Recipient list:", recipient_list)
 
     # Strip HTML to create plain text version
     text_content = strip_tags(message_html)

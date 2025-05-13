@@ -79,14 +79,7 @@
   <!-- Main container with grid -->
   <div class="container">
     <div class="row g-1">
-      {% comment %} <div class="col-4 mb-3">
-        <a class="link-box" style="background: linear-gradient(45deg, #af5ec5,rgb(211, 147, 236)); 
-                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-                                  position: relative;">
-          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
-          Leave Management System
-        </a>
-      </div>
+      {% comment %}
       <div class="col-4 mb-3">
         <a class="link-box" style="background: linear-gradient(45deg, #993f3e,rgb(236, 135, 135)); 
                                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
@@ -139,6 +132,14 @@
           Internet Guest Access
         </a>
       </div> {% endcomment %}
+      <div class="col-4 mb-3">
+        <a href="{% url 'leave:home' %}" class="link-box" style="background: linear-gradient(45deg, #af5ec5,rgb(211, 147, 236)); 
+                                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+                                  position: relative; font-size: 20px;">
+          <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
+          <b>Leave Management System</b>
+        </a>
+      </div>
       <div class="col-4 mb-3">
         <a href="{% url 'helpdesk:home' %}" class="link-box" style="background: linear-gradient(45deg, #ff6600,rgb(229, 169, 138)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
