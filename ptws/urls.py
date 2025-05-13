@@ -26,4 +26,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('app.urls', namespace='app')),
     path('helpdesk/', include('helpdesk.urls', namespace='helpdesk')),
+    path('leave/', include('leave.urls', namespace='leave')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
