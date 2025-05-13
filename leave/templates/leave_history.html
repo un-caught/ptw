@@ -1,0 +1,80 @@
+{% extends 'leavebase.html' %}
+
+{% block title %}Leave History{% endblock title %}
+
+{% block content %}
+<nav class="breadcrumb bg-light p-3 rounded-3 shadow-sm">
+    <a href="#" class="breadcrumb-item text-dark">Home</a>
+    <span class="breadcrumb-item active">Leave History</span>
+</nav>
+
+<!-- Filter Form -->
+<div class="container mt-4">
+    <form method="GET">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="year" class="form-label">Year</label>
+                <select class="form-control" name="year" id="year">
+                    {% for y in years %}
+                        <option value="{{ y }}" {% if y == year %} selected {% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="month" class="form-label">Month</label>
+                <select class="form-control" name="month" id="month">
+                    {% for month_item in months %}
+                        <option value="{{ month_item.value }}" {% if month_item.value == month %} selected {% endif %}>
+                            {{ month_item.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 align-self-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Leave History Table -->
+<div class="container mt-4">
+    <h4 class="mb-3">
+        Leave History for 
+        {% for month_item in months %}
+            {% if month_item.value == month %}
+                {{ month_item.name }} {{ year }}
+            {% endif %}
+        {% endfor %}
+    </h4>
+    <table class="table table-sm table-bordered table-striped table-hover" style="font-size: 0.9rem;">
+        <thead class="thead-light">
+            <tr>
+                <th>Leave Type</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Relief Officer</th>
+                <th>Line Manager</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leave in leaves %}
+                <tr>
+                    <td>{{ leave.leave_type }}</td>
+                    <td>{{ leave.start_date|date:"Y-m-d" }}</td>
+                    <td>{{ leave.end_date|date:"Y-m-d" }}</td>
+                    <td>{{ leave.relief_officer.get_full_name }}</td>
+                    <td>{{ leave.hod_or_line_manager.get_full_name }}</td>
+                    <td>{{ leave.status }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No leave records found for this period.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock content %}

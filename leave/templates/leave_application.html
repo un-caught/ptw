@@ -1,0 +1,195 @@
+
+{% extends 'leavebase.html' %}
+{% block title %}Leave Application{% endblock title %}
+
+{% block content %}
+
+<nav class="breadcrumb bg-light p-3 rounded-3 shadow-sm">
+    <a href="#" class="breadcrumb-item text-dark">Home</a>
+    <span class="breadcrumb-item active">Create New Leave Application</span>
+</nav>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="container mt-3">
+        <div class="form-wrapper p-4 rounded-4 shadow-sm bg-white">
+            <div class="head text-white p-3 rounded-3" style="background-color: #4a8bc2;">
+                <i class="fas fa-bars"></i> CREATE NEW LEAVE APPLICATION
+            </div>
+
+            <!-- Leave Balance Summary Table -->
+            <div class="col-md-8 mt-3">
+                <h6 class="mb-3">Leave Balance Summary</h6>
+                <table class="table table-sm table-bordered table-striped table-hover" style="font-size: 0.8rem;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="width: 40%;">Leave Type</th>
+                            <th style="width: 30%;">Days Used</th>
+                            <th style="width: 30%;">Outstanding</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave_type, data in leave_balances.items %}
+                        <tr>
+                            <td>{{ leave_type }}</td>
+                            <td>{{ data.used }}</td>
+                            <td>{{ data.outstanding }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Form Section -->
+            <div class="form-row mb-4 row g-3">
+                <div class="col-md-3">
+                    <label for="year" class="form-label">Year</label>
+                    {{ form.year }}
+                </div>
+                <div class="col-md-3">
+                    <label for="leave_type" class="form-label">Leave Type</label>
+                    {{ form.leave_type }}
+                </div>
+                <div class="col-md-3">
+                    <label for="purpose" class="form-label">Purpose</label>
+                    {{ form.purpose }}
+                </div>
+                <div class="col-md-3">
+                    <label for="address" class="form-label">Address</label>
+                    {{ form.address }}
+                </div>
+            </div>
+
+            <div class="form-row mb-4 row g-3">
+                <div class="col-md-3">
+                    <label for="phone_number" class="form-label">Phone Number</label>
+                    {{ form.phone_number }}
+                </div>
+                <div class="col-md-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    {{ form.start_date }}
+                </div>
+                <div class="col-md-3">
+                    <label for="number_of_days" class="form-label">Number of Days</label>
+                    <input type="number" id="number_of_days" name="number_of_days" min="1" class="form-control" required>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" id="add-days-btn" class="btn btn-primary w-100">Add Days</button>
+                </div>
+                <input type="hidden" name="end_date" id="end_date">
+            </div>
+
+
+            <!-- Leave Periods Table -->
+            <div id="leave-period-table" class="mt-4">
+                <h5 class="mb-2">Leave Periods</h5>
+                <table class="table table-sm table-bordered table-striped">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Start Date</th>
+                            <th>Days</th>
+                            <th>End Date</th>
+                            <th>Resumption Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leave-table-body">
+                        <!-- Dynamically added leave periods will appear here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Relief Officer and HOD/Line Manager Section -->
+            <div class="form-row mb-4 row g-3">
+                <div class="col-md-3">
+                    <label for="relief_officer" class="form-label">Relief Officer</label>
+                    {{ form.relief_officer }}
+                </div>
+                <div class="col-md-3">
+                    <label for="hod_or_line_manager" class="form-label">HOD/Line Manager</label>
+                    {{ form.hod_or_line_manager }}
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-success w-100 mt-4">Submit Application</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    // Function to add business days (skipping weekends)
+    function addBusinessDays(startDate, numberOfDays) {
+        let endDate = new Date(startDate);
+        let addedDays = 0;
+        while (addedDays < numberOfDays) {
+            endDate.setDate(endDate.getDate() + 1);
+            const day = endDate.getDay();
+            if (day !== 0 && day !== 6) {  // 0 = Sunday, 6 = Saturday
+                addedDays++;
+            }
+        }
+        return endDate;
+    }
+
+    // Event listener for "Add Days" button
+    document.getElementById('add-days-btn').addEventListener('click', function () {
+        const startDateInput = document.querySelector('input[name="start_date"]');
+        const numberOfDaysInput = document.getElementById('number_of_days');
+
+        const startDateStr = startDateInput.value;
+        const numberOfDays = parseInt(numberOfDaysInput.value, 10);
+
+        // Validate input
+        if (!startDateStr || isNaN(numberOfDays) || numberOfDays < 1) {
+            alert("Please select a start date and enter a valid number of days.");
+            return;
+        }
+
+        const startDate = new Date(startDateStr);
+        // Calculate end date excluding weekends
+        const endDate = addBusinessDays(startDate, numberOfDays);
+        
+        // Find resumption date (next business day after end date)
+        let resumptionDate = new Date(endDate);
+        do {
+            resumptionDate.setDate(resumptionDate.getDate() + 1);
+        } while (resumptionDate.getDay() === 6 || resumptionDate.getDay() === 0);
+
+        // Format dates to YYYY-MM-DD
+        const startDateFormatted = startDate.toISOString().split('T')[0];
+        const endDateFormatted = endDate.toISOString().split('T')[0];
+        const resumptionDateFormatted = resumptionDate.toISOString().split('T')[0];
+
+        // Create a table row for the leave period
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${startDateFormatted}</td>
+            <td>${numberOfDays}</td>
+            <td>${endDateFormatted}</td>
+            <td>${resumptionDateFormatted}</td>
+            <td><button type="button" class="remove-btn btn btn-danger btn-sm">Delete</button></td>
+        `;
+
+        // Add the row to the leave periods table
+        document.getElementById('leave-table-body').appendChild(row);
+
+        // Set the hidden end date input
+        document.getElementById('end_date').value = endDateFormatted;
+
+        // Optional: clear input fields if you wish (currently disabled)
+        // startDateInput.value = '';
+        // numberOfDaysInput.value = '';
+    });
+
+    // Event listener for removing leave periods
+    document.getElementById('leave-table-body').addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('remove-btn')) {
+            e.target.closest('tr').remove();
+        }
+    });
+</script>
+
+
+{% endblock content %}
+

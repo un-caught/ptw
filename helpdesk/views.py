@@ -51,7 +51,13 @@ def create_help_form(request):
             # Get admin group emails
             admin_group = Group.objects.get(name="admin")
             admin_emails = list(admin_group.user_set.values_list('email', flat=True))
-            recipients = admin_emails + [request.user.email]
+            # recipients = admin_emails + [request.user.email]
+            recipients = admin_emails.copy()
+
+            if request.user.is_authenticated and request.user.email:
+                recipients.append(request.user.email)
+
+            print("Recipients:", recipients)
 
             # Construct the inline HTML email
             html_content = f"""
@@ -323,7 +329,14 @@ def ticket_others(request):
             form.save_m2m()
             admin_group = Group.objects.get(name="admin")
             admin_emails = list(admin_group.user_set.values_list('email', flat=True))
-            recipients = admin_emails + [submission.user.email]
+            # recipients = admin_emails + [submission.user.email]
+
+            recipients = admin_emails.copy()
+
+            if request.user.is_authenticated and request.user.email:
+                recipients.append(submission.user.email)
+
+            print("Recipients:", recipients)
 
             # Construct the inline HTML email
             html_content = f"""
@@ -529,7 +542,16 @@ def admin_reply_ticket(request, pk):
                 response.save()
                 messages.success(request, 'Response saved successfully.')
 
-                recipients = [response.user.email]
+                # recipients = [response.user.email]
+                recipients = []
+
+                if response.user.is_authenticated and response.user.email:
+                    recipients.append(response.user.email)
+                else:
+                    print("Error: Invalid or missing user email.")
+                    recipients.append('defaultadmin@example.com')  # You can append a fallback admin email
+
+                print("Recipients:", recipients)
 
                 # Construct the inline HTML email
                 html_content = f"""

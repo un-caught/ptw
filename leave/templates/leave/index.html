@@ -1,0 +1,86 @@
+
+{% extends 'leavebase.html' %}
+{% block title %}Dashboard{% endblock title %}
+
+{% block content %}
+<div>
+<nav class="breadcrumb bg-light p-2  mt-2 mb-2" style="margin: 5px;">
+    <a href="#" class="breadcrumb-item text-dark">Home</a> 
+    <span class="breadcrumb-item active">Dashboard</span>
+</nav>
+<div class="row pt-3">
+    <!-- Annual Leave -->
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="card" style="background: linear-gradient(to right,rgb(158, 228, 115), #74b749); color: white;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-calendar-check text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Annual Leave Entitlement</h5>
+                <p class="card-text">{{ entitled_annual_leave }}</p> <!-- Total entitled annual leave days -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Annual Leave Used -->
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="card" style="background: linear-gradient(to right,rgb(223, 113, 221), #9d4a9c); color: white;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-calendar-minus text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Annual Leave Used</h5>
+                <p class="card-text">{{ used_annual_leave }}</p> <!-- Annual leave used -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Casual Leave Used -->
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+        <div class="card" style="background: linear-gradient(to right,rgb(230, 145, 117), #f37b53); color: white;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-users text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Casual Leave Used</h5>
+                <p class="card-text">{{ used_casual_leave }}</p> <!-- Casual leave used -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Sick Leave Used -->
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="card" style="background: linear-gradient(to right,rgb(114, 111, 111), #434343); color: white;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-heartbeat text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Sick Leave Used</h5>
+                <p class="card-text">{{ used_sick_leave }}</p> <!-- Sick leave used -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam/Study Leave Used -->
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="card" style="background: linear-gradient(to right,rgb(233, 183, 72), #e89414); color: white;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-book-reader text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Exam/Study Leave Used</h5>
+                <p class="card-text">{{ used_exam_study_leave }}</p> <!-- Exam/study leave used -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Compassionate Leave Used -->
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="card" style="background: linear-gradient(to right,rgb(174, 111, 52), #d07838); color: white;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-heart text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Compassionate Leave Used</h5>
+                <p class="card-text">{{ used_compassionate_leave }}</p> <!-- Compassionate leave used -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Maternity Leave Used -->
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="card" style="background: linear-gradient(to right,rgb(240, 100, 173), #f6649a); color: white;">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-baby text-white" style="font-size: 2rem; margin-right: 0.5rem;"></i> Maternity Leave Used</h5>
+                <p class="card-text">{{ used_maternity_leave }}</p> <!-- Maternity leave used -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    
+</div>
+{% endblock content %}
