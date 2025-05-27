@@ -2,9 +2,11 @@
 {% block title %}Manager Dashboard{% endblock title %}
 
 {% block content %}
+
+{% if section == 'ptw' %}
 <div class="row pt-3">
     <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
-        <div class="card" style="background: linear-gradient(to right, #28a745,rgb(10, 100, 29)); color: white;">
+        <div class="card" style="background: linear-gradient(to right, #28a745, rgb(10, 100, 29)); color: white;">
             <div class="card-body">
                 <h5 class="card-title">Approved PTW</h5>
                 <p class="card-text">{{ approved_ptw }}</p>
@@ -12,15 +14,23 @@
         </div>
     </div>
     <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
-        <div class="card" style="background: linear-gradient(to right, #ffc107,rgb(155, 117, 3)); color: white;">
+        <div class="card" style="background: linear-gradient(to right, #ffc107, rgb(155, 117, 3)); color: white;">
             <div class="card-body">
                 <h5 class="card-title">Pending PTW</h5>
                 <p class="card-text">{{ pending_ptw_manager }}</p>
             </div>
         </div>
     </div>
+</div>
+
+<div data-aos="fade-up" data-aos-delay="400">
+    <img src="data:image/png;base64,{{ combined_chart }}" alt="PTW Chart" style="max-width: 100%; height: auto;">
+</div>
+
+{% elif section == 'nhir' %}
+<div class="row pt-3">
     <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
-        <div class="card" style="background: linear-gradient(to right, #007bff,rgb(16, 62, 112)); color: white;">
+        <div class="card" style="background: linear-gradient(to right, #007bff, rgb(16, 62, 112)); color: white;">
             <div class="card-body">
                 <h5 class="card-title">Closed NHIR</h5>
                 <p class="card-text">{{ closed_nhis }}</p>
@@ -28,7 +38,7 @@
         </div>
     </div>
     <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
-        <div class="card" style="background: linear-gradient(to right, #6f42c1,rgb(51, 17, 116)); color: white;">
+        <div class="card" style="background: linear-gradient(to right, #6f42c1, rgb(51, 17, 116)); color: white;">
             <div class="card-body">
                 <h5 class="card-title">Pending NHIR</h5>
                 <p class="card-text">{{ pending_nhis_manager }}</p>
@@ -38,8 +48,13 @@
 </div>
 
 <div data-aos="fade-up" data-aos-delay="400">
-    <img src="data:image/png;base64,{{ combined_chart }}" alt="Combined Chart" style="max-width: 100%; height: auto;">
+    <img src="data:image/png;base64,{{ combined_chart }}" alt="NHIR Chart" style="max-width: 100%; height: auto;">
 </div>
 
+{% else %}
+<div class="alert alert-info mt-4">
+    Please choose NHIR or PTW section to view data.
+</div>
+{% endif %}
 
 {% endblock content %}

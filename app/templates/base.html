@@ -133,13 +133,28 @@
 
         {% else %}
             {% if is_supervisor %}
-            <a href="{% url 'app:supervisor' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>            
+                {% if section != 'nhir' %}
+                    <a href="{% url 'app:supervisor' %}?section=ptw" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                {% endif %}
+                {% if section != 'ptw' %}
+                    <a href="{% url 'app:supervisor' %}?section=nhir" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                {% endif %}            
             {% else %}
-            <a href="{% url 'app:manager' %}" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                {% if section != 'nhir' %}
+                    <a href="{% url 'app:manager' %}?section=ptw" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                {% endif %}
+                {% if section != 'ptw' %}
+                    <a href="{% url 'app:manager' %}?section=nhir" ><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                {% endif %}
             {% endif %}
-            <a href="{% url 'app:form_list' %}"><i class="fas fa-list-alt"></i> PTW Forms</a>
-            <a href="{% url 'app:nhis_list' %}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
-            <a href="{% url 'app:form_report' %}"><i class="fas fa-file-alt"></i> Report</a>
+            {% if section != 'nhir' %}
+                <a href="{% url 'app:form_list' %}?section={{ section }}"><i class="fas fa-list-alt"></i> PTW Forms</a>
+                <a href="{% url 'app:form_report' %}?section={{ section }}"><i class="fas fa-file-alt"></i> Report</a>
+            {% endif %}
+            {% if section != 'ptw' %}
+                <a href="{% url 'app:nhis_list' %}?section={{ section }}"><i class="fas fa-list-alt"></i> NHIR Forms</a>
+                <a href="{% url 'app:form_report' %}?section={{ section }}"><i class="fas fa-file-alt"></i> Report</a>
+            {% endif %}
             <a href="{% url 'app:dashboard' %}"><i class="fas fa-sign-out-alt"></i> Back To Home</a>
         {% endif %}
 

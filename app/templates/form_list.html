@@ -7,11 +7,12 @@
     <div class="card-body">
         <h1 class="text-center mb-4 mt-2 pt-2">Permit to Work (PTW) Forms</h1>
         {% if is_vendor %}
-        <a href="{% url 'app:create_form' %}" class="btn btn-primary mb-3" >Create New PTW Form</a>
+        <a href="{% url 'app:create_form' %}?section={{ section }}" class="btn btn-primary mb-3" >Create New PTW Form</a>
         {% endif %}
 
         <div class="container mt-2 mb-4">
             <form method="get" class="row g-3 align-items-end shadow-sm p-4  rounded border">
+                <input type="hidden" name="section" value="{{ section }}">
                 <div class="col-md-4">
                     <label for="start_date" class="form-label fw-bold">Start Date</label>
                     <input type="date" id="start_date" name="start_date" class="form-control"
@@ -43,6 +44,7 @@
                         <th scope="col">Location</th>
                         <th scope="col">Risk Assessment</th>
                         <th scope="col">Status</th>
+                        <th scope="col">Remark</th>
                         <th scope="col">Actions</th>
                         {% if is_supervisor or is_manager %}
                         <th scope="col">Approval</th>
@@ -75,6 +77,7 @@
                                     {% endif %}
                                 </span>
                             </td>
+                            <td>{{ submission.remark }}</td>
                             
                             <td>
                                 {% if is_vendor %}
@@ -82,35 +85,36 @@
                                     <a href="#" class="btn btn-sm btn-secondary mb-1">Print</a>
                                    
                                 {% elif submission.status == 'awaiting_supervisor' %}
-                                    <a href="{% url 'app:edit_form' submission.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                                    <a href="{% url 'app:edit_form' submission.pk %}?section={{ section }}" class="btn btn-sm btn-secondary">Edit</a>
                                 {% endif %}
                                 
                                     <form action="{% url 'app:delete_form' submission.pk %}" method="post" style="display: inline;" class="pb-2">
+                                        <input type="hidden" name="section" value="{{ section }}">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                     </form>
                                     
                                 {% elif is_supervisor or is_manager %}
                                     <!-- Supervisor/Manager can view the form -->
-                                    <a href="{% url 'app:view_form' submission.pk %}" class="btn btn-sm btn-info">View</a>
+                                    <a href="{% url 'app:view_form' submission.pk %}?section={{ section }}" class="btn btn-sm btn-info">View</a>
                                 {% endif %}
                                 </td>
                                 <!-- Role-Based Action Buttons -->
                                 <td>
                                 {% if is_supervisor %}
                                     {% if submission.status == 'awaiting_supervisor' %}
-                                    <a href="{% url 'app:edit_form' submission.pk %}" class="btn btn-sm btn-secondary">Sign</a> 
+                                    <a href="{% url 'app:edit_form' submission.pk %}?section={{ section }}" class="btn btn-sm btn-secondary">Sign</a> 
                                     {% elif submission.status == 'supervisor_signed' %}                                   
-                                    <a href="{% url 'app:approve_supervisor' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve</a>
+                                    <a href="{% url 'app:approve_supervisor' submission.pk %}?section={{ section }}" class="btn btn-sm btn-primary mb-1">Approve</a>
                                     <br>
-                                    <a href="{% url 'app:disapprove_supervisor' submission.pk %}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
+                                    <a href="{% url 'app:disapprove_supervisor' submission.pk %}?section={{ section }}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
                                     {% endif %}
                                 {% elif is_manager %}
                                     {% if submission.status == 'awaiting_manager' %}
-                                    <a href="{% url 'app:edit_form' submission.pk %}" class="btn btn-sm btn-secondary">Sign</a>
+                                    <a href="{% url 'app:edit_form' submission.pk %}?section={{ section }}" class="btn btn-sm btn-secondary">Sign</a>
                                     {% elif submission.status == 'manager_signed' %}
-                                    <a href="{% url 'app:approve_manager' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve</a>
-                                    <a href="{% url 'app:disapprove_manager' submission.pk %}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
+                                    <a href="{% url 'app:approve_manager' submission.pk %}?section={{ section }}" class="btn btn-sm btn-primary mb-1">Approve</a>
+                                    <a href="{% url 'app:disapprove_manager' submission.pk %}?section={{ section }}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
                                     {% endif %}
                                 {% comment %} {% else %}
                                     {% if submission.status == 'pending' %}

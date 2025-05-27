@@ -129,6 +129,7 @@ def clientDashboard(request):
 @login_required(login_url='app:login')
 @allowed_users(allowed_roles=['supervisor'])
 def supervisorDashboard(request):
+    section = request.GET.get('section')  # Moved to top
 
     location_group_map = {
         'supervisor_hq': 'HQ_Lekki',
@@ -137,7 +138,6 @@ def supervisorDashboard(request):
         'supervisor_lfz': 'LFZ_Ibeju',
     }
 
-    # Get the supervisor's group and determine their location
     user_groups = request.user.groups.values_list('name', flat=True)
     user_location = None
     for group in user_groups:
@@ -145,123 +145,99 @@ def supervisorDashboard(request):
             user_location = location_group_map[group]
             break
 
-    # Fallback: show no data if location isn't matched
     if not user_location:
-        context = {
-            'total_ptw': 0,
-            'approved_ptw': 0,
-            'disapproved_ptw': 0,
-            'pending_ptw': 0,
-            'total_nhis': 0,
-            'closed_nhis': 0,
-            'denied_nhis': 0,
-            'pending_nhis': 0,
-            'combined_chart': None,
-        }
-        return render(request, 'supervisor.html', context)
+        return render(request, 'supervisor.html', {'combined_chart': None})
 
-    # Query PTW forms filtered by the supervisor's location
-    total_ptw = PTWForm.objects.filter(location=user_location).count()
-    approved_ptw = PTWForm.objects.filter(location=user_location, status='approved').count()
-    disapproved_ptw = PTWForm.objects.filter(location=user_location, status='disapproved').count()
-    pending_ptw = PTWForm.objects.filter(location=user_location, status__in=['awaiting_supervisor', 'awaiting_manager']).count()
-
-    # Query NHIS forms filtered by the supervisor's location
-    total_nhis = NHISForm.objects.filter(location=user_location).count()
-    closed_nhis = NHISForm.objects.filter(location=user_location, status='closed').count()
-    denied_nhis = NHISForm.objects.filter(location=user_location, status='denied').count()
-    pending_nhis = NHISForm.objects.filter(location=user_location, status__in=['awaiting_supervisor', 'awaiting_manager']).count()
-
-    # Get the current year
+    context = {}
     current_year = datetime.now().year
-
-    # Define the list of all months
     all_months = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ]
 
-    # Query PTW forms grouped by month
-    ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year, location=user_location) \
-                                       .annotate(month=TruncMonth('date_submitted')) \
-                                       .values('month') \
-                                       .annotate(count=Count('id')) \
-                                       .order_by('month')
+    if section == 'ptw':
+        total_ptw = PTWForm.objects.filter(location=user_location).count()
+        approved_ptw = PTWForm.objects.filter(location=user_location, status='approved').count()
+        disapproved_ptw = PTWForm.objects.filter(location=user_location, status='disapproved').count()
+        pending_ptw = PTWForm.objects.filter(location=user_location, status__in=['awaiting_supervisor', 'awaiting_manager']).count()
 
-    # Initialize the counts for each month (start with zero)
-    ptw_counts = [0] * 12
-    ptw_months = all_months[:]  # Copy the list of all months
+        ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year, location=user_location) \
+                                           .annotate(month=TruncMonth('date_submitted')) \
+                                           .values('month') \
+                                           .annotate(count=Count('id')) \
+                                           .order_by('month')
 
-    # Map the month data from the query into the list
-    for stat in ptw_monthly_stats:
-        month_index = stat['month'].month - 1
-        ptw_counts[month_index] = stat['count']
+        ptw_counts = [0] * 12
+        for stat in ptw_monthly_stats:
+            month_index = stat['month'].month - 1
+            ptw_counts[month_index] = stat['count']
 
-    # Query NHIS forms grouped by month
-    nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year, location=user_location) \
-                                         .annotate(month=TruncMonth('date_submitted')) \
-                                         .values('month') \
-                                         .annotate(count=Count('id')) \
-                                         .order_by('month')
+        # Generate PTW-only chart
+        fig, ax = plt.subplots(figsize=(11, 6))
+        ax.bar(range(12), ptw_counts, color=sns.color_palette("Blues")[5], edgecolor='black')
+        ax.set_xticks(range(12))
+        ax.set_xticklabels(all_months, rotation=45, ha='right')
+        ax.set_title(f'PTW Form Submissions ({current_year})', fontsize=16)
+        ax.set_ylabel('Number of Forms')
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.grid(True, linestyle='--', alpha=0.6)
 
-    # Initialize the counts for each month (start with zero)
-    nhis_counts = [0] * 12
+        buffer = io.BytesIO()
+        plt.tight_layout()
+        plt.savefig(buffer, format='png', transparent=True)
+        buffer.seek(0)
+        chart = base64.b64encode(buffer.read()).decode()
 
-    # Map the month data from the query into the list
-    for stat in nhis_monthly_stats:
-        month_index = stat['month'].month - 1
-        nhis_counts[month_index] = stat['count']
+        context.update({
+            'total_ptw': total_ptw,
+            'approved_ptw': approved_ptw,
+            'disapproved_ptw': disapproved_ptw,
+            'pending_ptw': pending_ptw,
+            'combined_chart': chart,
+            'section': section,
+        })
 
-    # Set Seaborn style
-    sns.set_theme(style="whitegrid")  # You can experiment with different themes like "darkgrid", "ticks", etc.
-    
-    # Create the combined bar chart for PTW and NHIS forms
-    fig, ax = plt.subplots(figsize=(11, 6))  # Increase figure size for better visibility
-    width = 0.35  # the width of the bars
+    elif section == 'nhir':
+        total_nhis = NHISForm.objects.filter(location=user_location).count()
+        closed_nhis = NHISForm.objects.filter(location=user_location, status='closed').count()
+        denied_nhis = NHISForm.objects.filter(location=user_location, status='denied').count()
+        pending_nhis = NHISForm.objects.filter(location=user_location, status__in=['awaiting_supervisor', 'awaiting_manager']).count()
 
-    # Create positions for PTW and NHIS bars
-    x = range(12)
+        nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year, location=user_location) \
+                                             .annotate(month=TruncMonth('date_submitted')) \
+                                             .values('month') \
+                                             .annotate(count=Count('id')) \
+                                             .order_by('month')
 
-    # Use Seaborn color palettes
-    ptw_color = sns.color_palette("Blues")[5]  # A nice shade of blue
-    nhis_color = sns.color_palette("Oranges")[4]  # A nice shade of orange
+        nhis_counts = [0] * 12
+        for stat in nhis_monthly_stats:
+            month_index = stat['month'].month - 1
+            nhis_counts[month_index] = stat['count']
 
-    ax.bar(x, ptw_counts, width, label='PTW Forms', color=ptw_color, edgecolor='black')
-    ax.bar([p + width for p in x], nhis_counts, width, label='NHIS Forms', color=nhis_color, edgecolor='black')
+        # Generate NHIR-only chart
+        fig, ax = plt.subplots(figsize=(11, 6))
+        ax.bar(range(12), nhis_counts, color=sns.color_palette("Oranges")[4], edgecolor='black')
+        ax.set_xticks(range(12))
+        ax.set_xticklabels(all_months, rotation=45, ha='right')
+        ax.set_title(f'NHIR Form Submissions ({current_year})', fontsize=16)
+        ax.set_ylabel('Number of Forms')
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.grid(True, linestyle='--', alpha=0.6)
 
-    ax.set_xticks([p + width / 2 for p in x])
-    ax.set_xticklabels(all_months, rotation=45, ha='right')  # Rotate month labels for readability
+        buffer = io.BytesIO()
+        plt.tight_layout()
+        plt.savefig(buffer, format='png', transparent=True)
+        buffer.seek(0)
+        chart = base64.b64encode(buffer.read()).decode()
 
-    # Beautify chart with gridlines, title, and axis labels
-    ax.set_xlabel('Month', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Number of Forms', fontsize=14, fontweight='bold')
-    ax.set_title(f'Monthly PTW and NHIS Form Submissions ({current_year})', fontsize=16, fontweight='bold')
-
-    ax.legend(title='Form Types', fontsize=12)
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))  # Ensure the y-axis is integer
-
-    # Add gridlines for better readability
-    ax.grid(True, linestyle='--', alpha=0.6)
-
-    # Save the combined chart to a BytesIO object to embed in the template
-    buffer = io.BytesIO()
-    plt.tight_layout()  # Improve layout to avoid clipping of labels
-    plt.savefig(buffer, format='png', transparent=True)
-    buffer.seek(0)
-    combined_chart_image = base64.b64encode(buffer.read()).decode()
-
-    # Return the context with the metrics and the combined chart
-    context = {
-        'total_ptw': total_ptw,
-        'approved_ptw': approved_ptw,
-        'disapproved_ptw': disapproved_ptw,
-        'pending_ptw': pending_ptw,
-        'total_nhis': total_nhis,
-        'closed_nhis': closed_nhis,
-        'denied_nhis': denied_nhis,
-        'pending_nhis': pending_nhis,
-        'combined_chart': combined_chart_image,  # Combined chart image
-    }
+        context.update({
+            'total_nhis': total_nhis,
+            'closed_nhis': closed_nhis,
+            'denied_nhis': denied_nhis,
+            'pending_nhis': pending_nhis,
+            'combined_chart': chart,
+            'section': section,
+        })
 
     return render(request, 'supervisor.html', context)
 
@@ -270,6 +246,8 @@ def supervisorDashboard(request):
 @login_required(login_url='app:login')
 @allowed_users(allowed_roles=['manager'])
 def managerDashboard(request):
+    section = request.GET.get('section')  # Handle ?section=ptw or ?section=nhir
+
     location_group_map = {
         'manager_hq': 'HQ_Lekki',
         'manager_cgs': 'CGS_Ikorodu',
@@ -277,7 +255,6 @@ def managerDashboard(request):
         'manager_lfz': 'LFZ_Ibeju',
     }
 
-    # Get the manager's group and determine their location
     user_groups = request.user.groups.values_list('name', flat=True)
     user_location = None
     for group in user_groups:
@@ -285,91 +262,92 @@ def managerDashboard(request):
             user_location = location_group_map[group]
             break
 
-    # Fallback: show no data if location isn't matched
     if not user_location:
-        context = {
-            'approved_ptw': 0,
-            'pending_ptw_manager': 0,
-            'closed_nhis': 0,
-            'pending_nhis_manager': 0,
-            'combined_chart': None,
-        }
-        return render(request, 'manager.html', context)
+        return render(request, 'manager.html', {'combined_chart': None, 'section': section})
 
-    # Query PTW forms filtered by manager's location
-    approved_ptw = PTWForm.objects.filter(location=user_location, status='approved').count()
-    pending_ptw_manager = PTWForm.objects.filter(location=user_location, status='awaiting_manager').count()
-
-    # Query NHIS forms filtered by manager's location
-    closed_nhis = NHISForm.objects.filter(location=user_location, status='closed').count()
-    pending_nhis_manager = NHISForm.objects.filter(location=user_location, status='awaiting_manager').count()
-
-    # Get the current year and month list
+    context = {}
     current_year = datetime.now().year
     all_months = [
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ]
 
-    # Query PTW forms grouped by month
-    ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year, location=user_location) \
-                                       .annotate(month=TruncMonth('date_submitted')) \
-                                       .values('month') \
-                                       .annotate(count=Count('id')) \
-                                       .order_by('month')
+    if section == 'ptw':
+        approved_ptw = PTWForm.objects.filter(location=user_location, status='approved').count()
+        pending_ptw_manager = PTWForm.objects.filter(location=user_location, status='awaiting_manager').count()
 
-    ptw_counts = [0] * 12
-    for stat in ptw_monthly_stats:
-        month_index = stat['month'].month - 1
-        ptw_counts[month_index] = stat['count']
+        ptw_monthly_stats = PTWForm.objects.filter(date_submitted__year=current_year, location=user_location) \
+                                           .annotate(month=TruncMonth('date_submitted')) \
+                                           .values('month') \
+                                           .annotate(count=Count('id')) \
+                                           .order_by('month')
 
-    # Query NHIS forms grouped by month
-    nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year, location=user_location) \
-                                         .annotate(month=TruncMonth('date_submitted')) \
-                                         .values('month') \
-                                         .annotate(count=Count('id')) \
-                                         .order_by('month')
+        ptw_counts = [0] * 12
+        for stat in ptw_monthly_stats:
+            month_index = stat['month'].month - 1
+            ptw_counts[month_index] = stat['count']
 
-    nhis_counts = [0] * 12
-    for stat in nhis_monthly_stats:
-        month_index = stat['month'].month - 1
-        nhis_counts[month_index] = stat['count']
+        fig, ax = plt.subplots(figsize=(11, 6))
+        ax.bar(range(12), ptw_counts, color=sns.color_palette("Blues")[5], edgecolor='black')
+        ax.set_xticks(range(12))
+        ax.set_xticklabels(all_months, rotation=45, ha='right')
+        ax.set_title(f'PTW Form Submissions ({current_year})', fontsize=16)
+        ax.set_ylabel('Number of Forms')
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.grid(True, linestyle='--', alpha=0.6)
 
-    # Set Seaborn style and create chart
-    sns.set_theme(style="whitegrid")
-    fig, ax = plt.subplots(figsize=(11, 6))
-    width = 0.35
-    x = range(12)
-    ptw_color = sns.color_palette("Blues")[5]
-    nhis_color = sns.color_palette("Oranges")[4]
+        buffer = io.BytesIO()
+        plt.tight_layout()
+        plt.savefig(buffer, format='png', transparent=True)
+        buffer.seek(0)
+        chart = base64.b64encode(buffer.read()).decode()
 
-    ax.bar(x, ptw_counts, width, label='PTW Forms', color=ptw_color, edgecolor='black')
-    ax.bar([p + width for p in x], nhis_counts, width, label='NHIS Forms', color=nhis_color, edgecolor='black')
+        context.update({
+            'approved_ptw': approved_ptw,
+            'pending_ptw_manager': pending_ptw_manager,
+            'combined_chart': chart,
+            'section': section,
+        })
 
-    ax.set_xticks([p + width / 2 for p in x])
-    ax.set_xticklabels(all_months, rotation=45, ha='right')
-    ax.set_xlabel('Month', fontsize=14, fontweight='bold')
-    ax.set_ylabel('Number of Forms', fontsize=14, fontweight='bold')
-    ax.set_title(f'Monthly PTW and NHIS Form Submissions ({current_year})', fontsize=16, fontweight='bold')
-    ax.legend(title='Form Types', fontsize=12)
-    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-    ax.grid(True, linestyle='--', alpha=0.6)
+    elif section == 'nhir':
+        closed_nhis = NHISForm.objects.filter(location=user_location, status='closed').count()
+        pending_nhis_manager = NHISForm.objects.filter(location=user_location, status='awaiting_manager').count()
 
-    buffer = io.BytesIO()
-    plt.tight_layout()
-    plt.savefig(buffer, format='png', transparent=True)
-    buffer.seek(0)
-    combined_chart_image = base64.b64encode(buffer.read()).decode()
+        nhis_monthly_stats = NHISForm.objects.filter(date_submitted__year=current_year, location=user_location) \
+                                             .annotate(month=TruncMonth('date_submitted')) \
+                                             .values('month') \
+                                             .annotate(count=Count('id')) \
+                                             .order_by('month')
 
-    context = {
-        'approved_ptw': approved_ptw,
-        'pending_ptw_manager': pending_ptw_manager,
-        'closed_nhis': closed_nhis,
-        'pending_nhis_manager': pending_nhis_manager,
-        'combined_chart': combined_chart_image,
-    }
+        nhis_counts = [0] * 12
+        for stat in nhis_monthly_stats:
+            month_index = stat['month'].month - 1
+            nhis_counts[month_index] = stat['count']
+
+        fig, ax = plt.subplots(figsize=(11, 6))
+        ax.bar(range(12), nhis_counts, color=sns.color_palette("Oranges")[4], edgecolor='black')
+        ax.set_xticks(range(12))
+        ax.set_xticklabels(all_months, rotation=45, ha='right')
+        ax.set_title(f'NHIR Form Submissions ({current_year})', fontsize=16)
+        ax.set_ylabel('Number of Forms')
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.grid(True, linestyle='--', alpha=0.6)
+
+        buffer = io.BytesIO()
+        plt.tight_layout()
+        plt.savefig(buffer, format='png', transparent=True)
+        buffer.seek(0)
+        chart = base64.b64encode(buffer.read()).decode()
+
+        context.update({
+            'closed_nhis': closed_nhis,
+            'pending_nhis_manager': pending_nhis_manager,
+            'combined_chart': chart,
+            'section': section,
+        })
 
     return render(request, 'manager.html', context)
+
 
 
 
@@ -538,7 +516,7 @@ def form_list(request):
                     if allowed_location:
                         submissions = all_forms.filter(
                             location=allowed_location,
-                            status__in=['awaiting_manager', 'closed']
+                            status__in=['awaiting_manager', 'manager_signed', 'closed']
                         )
                         break
 
@@ -1014,6 +992,7 @@ def view_nhis_form(request, pk):
 def form_report(request):
     start_date = None
     end_date = None
+    form_type_filter = request.GET.get('form_type')
 
     # Get the date range parameters from the request
     if 'startDate' in request.GET and 'endDate' in request.GET:
@@ -1024,21 +1003,19 @@ def form_report(request):
     start_date = parse_date(start_date) if start_date else None
     end_date = parse_date(end_date) if end_date else None
 
-    print(f"Start date: {start_date}, End date: {end_date}")
+    print(f"Start date: {start_date}, End date: {end_date}, Form Type: {form_type_filter}")
 
     # Initialize report_data to None initially
     report_data = []
 
-    pie_chart_data_form_type = {'NHIS': 0, 'PTW': 0}
-    pie_chart_data_status = {
-        'approved': 0,
-        'disapproved': 0,
-        'awaiting_manager': 0,
-        'awaiting_supervisor': 0,
-        'closed': 0,
-        'denied': 0,
-    }
-        # Location group map for access control
+    # Initialize counts for pie charts
+    nhis_completed_counts = {'closed': 0, 'denied': 0}
+    nhis_pending_counts = {'awaiting_supervisor': 0}
+
+    ptw_completed_counts = {'approved': 0, 'disapproved': 0}
+    ptw_pending_counts = {'awaiting_manager': 0, 'awaiting_supervisor': 0}
+
+    # Location group map for access control
     location_group_map = {
         'supervisor_hq': 'HQ_Lekki',
         'supervisor_cgs': 'CGS_Ikorodu',
@@ -1058,30 +1035,31 @@ def form_report(request):
             user_location = location_group_map[group]
             break
 
+    if start_date or end_date or form_type_filter:
+        nhis_submissions = NHISForm.objects.none()
+        ptw_submissions = PTWForm.objects.none()
 
-    # If a valid date range is provided, filter and fetch the data
-    if start_date or end_date:
-        # Fetch NHIS form submissions within the date range
-        nhis_submissions = NHISForm.objects.all()
-        if user_location:
-            nhis_submissions = nhis_submissions.filter(location=user_location)
-        if start_date and end_date:
-            nhis_submissions = nhis_submissions.filter(date_submitted__range=[start_date, end_date])
-        elif start_date:
-            nhis_submissions = nhis_submissions.filter(date_submitted__gte=start_date)
-        elif end_date:
-            nhis_submissions = nhis_submissions.filter(date_submitted__lte=end_date)
+        if form_type_filter in [None, '', 'NHIS']:
+            nhis_submissions = NHISForm.objects.all()
+            if user_location:
+                nhis_submissions = nhis_submissions.filter(location=user_location)
+            if start_date and end_date:
+                nhis_submissions = nhis_submissions.filter(date_submitted__range=[start_date, end_date])
+            elif start_date:
+                nhis_submissions = nhis_submissions.filter(date_submitted__gte=start_date)
+            elif end_date:
+                nhis_submissions = nhis_submissions.filter(date_submitted__lte=end_date)
 
-        # Fetch PTW form submissions within the date range
-        ptw_submissions = PTWForm.objects.all()
-        if user_location:
-            ptw_submissions = ptw_submissions.filter(location=user_location)
-        if start_date and end_date:
-            ptw_submissions = ptw_submissions.filter(date_submitted__range=[start_date, end_date])
-        elif start_date:
-            ptw_submissions = ptw_submissions.filter(date_submitted__gte=start_date)
-        elif end_date:
-            ptw_submissions = ptw_submissions.filter(date_submitted__lte=end_date)
+        if form_type_filter in [None, '', 'PTW']:
+            ptw_submissions = PTWForm.objects.all()
+            if user_location:
+                ptw_submissions = ptw_submissions.filter(location=user_location)
+            if start_date and end_date:
+                ptw_submissions = ptw_submissions.filter(date_submitted__range=[start_date, end_date])
+            elif start_date:
+                ptw_submissions = ptw_submissions.filter(date_submitted__gte=start_date)
+            elif end_date:
+                ptw_submissions = ptw_submissions.filter(date_submitted__lte=end_date)
 
         # Combine both form submissions into one list
         
@@ -1105,16 +1083,20 @@ def form_report(request):
                 'status': submission.status,
             })
 
-        
+        # After fetching submissions and building report_data...
 
         for submission in report_data:
-            pie_chart_data_form_type[submission['form_type']] += 1
-            pie_chart_data_status[submission['status']] += 1
+            if submission['form_type'] == 'NHIS':
+                if submission['status'] in nhis_completed_counts:
+                    nhis_completed_counts[submission['status']] += 1
+                elif submission['status'] in nhis_pending_counts:
+                    nhis_pending_counts[submission['status']] += 1
 
-    else:
-        pie_chart_data_form_type = None
-        pie_chart_data_status = None
-
+            elif submission['form_type'] == 'PTW':
+                if submission['status'] in ptw_completed_counts:
+                    ptw_completed_counts[submission['status']] += 1
+                elif submission['status'] in ptw_pending_counts:
+                    ptw_pending_counts[submission['status']] += 1 
 
 
     if 'download_pdf' in request.GET:
@@ -1143,11 +1125,14 @@ def form_report(request):
     return render(request, 'report.html', {
         'start_date': start_date,
         'end_date': end_date,
+        'form_type_filter': form_type_filter,
         'total_nhis': len(nhis_submissions) if report_data else 0,
         'total_ptw': len(ptw_submissions) if report_data else 0,
         'report_data': report_data,
-        'pie_chart_data_form_type': pie_chart_data_form_type,
-        'pie_chart_data_status': pie_chart_data_status,
+        'nhis_completed_counts': nhis_completed_counts,
+        'nhis_pending_counts': nhis_pending_counts,
+        'ptw_completed_counts': ptw_completed_counts,
+        'ptw_pending_counts': ptw_pending_counts,
     })
 
 
@@ -1390,26 +1375,21 @@ def generate_pdf(submission):
     if submission.user:
         elements.append(Paragraph(f"<b>User:</b> {submission.user.get_full_name()}", normal_style))
     elements.append(Paragraph(f"<b>Location:</b> {submission.location}", normal_style))
-    elements.append(Paragraph(f"<b>Status:</b> {submission.status}", normal_style))
+    elements.append(Paragraph(f"<b>Status:</b> {submission.get_status_display()}", normal_style))
     elements.append(Spacer(1, 12))
 
     # Section Header
     elements.append(Paragraph("Details", styles["SubHeading"]))
 
-    # Form fields to display
     details = [
         ("Date", submission.date),
         ("Hazard Identification", ", ".join([str(item) for item in submission.hazard.all()])),
-        ("Risk Type", submission.risk_type),
-        ("RAM Rating", submission.ram_rating),
-        ("Description Of Observations", submission.observation),
-        ("Immediate Action Taken", submission.action_taken),
-        ("Further Action To Prevent Recurrence", submission.preventive_action),
-        ("Responsible Action Party", submission.responsible_party),
-        ("Target Date/Time", submission.target_date),
-        ("Observed By", submission.observed_by),
-        ("Department", submission.dept),
-        ("Date/Time Observed", submission.observed_date)
+        ("Observer / Reporter", submission.observed_by),
+        ("Other Location", submission.other_location or "None specified"),
+        ("Activity", submission.activity),
+        ("(NPAI) Description", submission.observation),
+        ("Immediate Action Taken by Observer / Reporter", submission.action_taken),
+        ("Suggested Further Action To Prevent Recurrence", submission.preventive_action),
     ]
 
     # Create a table for details
@@ -1434,6 +1414,149 @@ def generate_pdf(submission):
     ]))
 
     elements.append(table)
+
+    # Section Header
+    # elements.append(Paragraph("Details", styles["SubHeading"]))
+    # elements.append(Spacer(1, 6))
+
+    # # Row: Date | Observer
+    # row1 = Table([
+    #     [
+    #         Paragraph(f"<b>Date</b><br/>{submission.date or '-'}", normal_style),
+    #         Paragraph(f"<b>Observer / Reporter</b><br/>{submission.observed_by or '-'}", normal_style)
+    #     ]
+    # ], colWidths=[3.5 * inch, 3.5 * inch])
+    # row1.setStyle(TableStyle([
+    #     ('BACKGROUND', (0, 0), (-1, -1), colors.whitesmoke),
+    #     ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor('#aaaaaa')),
+    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    #     ('TOPPADDING', (0, 0), (-1, -1), 6),
+    #     ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    #     ('LEFTPADDING', (0, 0), (-1, -1), 8),
+    #     ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+    # ]))
+    # elements.append(row1)
+    # elements.append(Spacer(1, 6))
+
+    # # Row: Other Location | Activity (with boxes)
+    # row2 = Table([
+    #     [
+    #         Table([[Paragraph(f"<b>Other Location</b>", normal_style)],
+    #                [Paragraph(submission.other_location or 'None specified', normal_style)]],
+    #               colWidths=[3.4 * inch]),
+    #         Table([[Paragraph(f"<b>Activity</b>", normal_style)],
+    #                [Paragraph(submission.activity or '-', normal_style)]],
+    #               colWidths=[3.4 * inch]),
+    #     ]
+    # ], colWidths=[3.5 * inch, 3.5 * inch])
+    # row2.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    # for cell_table in row2._cellvalues[0]:
+    #     cell_table.setStyle(TableStyle([
+    #         ('BOX', (0, 1), (-1, -1), 0.75, colors.HexColor('#999999')),
+    #         ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f9f9f9')),
+    #         ('LEFTPADDING', (0, 1), (-1, -1), 6),
+    #         ('RIGHTPADDING', (0, 1), (-1, -1), 6),
+    #         ('TOPPADDING', (0, 1), (-1, -1), 6),
+    #         ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+    #         ('MINROWHEIGHT', (1, 0), (1, 0), 45),
+    #     ]))
+    # elements.append(row2)
+    # elements.append(Spacer(1, 10))
+
+    # # Row: NPAI Description (box) | Hazard Identification (box)
+    # row3 = Table([
+    #     [
+    #         Table([[Paragraph(f"<b>(NPAI) Description</b>", normal_style)],
+    #                [Paragraph(submission.observation or '-', normal_style)]],
+    #               colWidths=[5.5 * inch]),
+    #         Table([[Paragraph(f"<b>Hazard Identification</b>", normal_style)],
+    #                [Paragraph(', '.join(str(i) for i in submission.hazard.all()) or '-', normal_style)]],
+    #               colWidths=[1.5 * inch]),
+    #     ]
+    # ], colWidths=[5.6 * inch, 1.4 * inch])
+    # row3.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    # for cell_table in row3._cellvalues[0]:
+    #     cell_table.setStyle(TableStyle([
+    #         ('BOX', (0, 1), (-1, -1), 0.75, colors.HexColor('#999999')),
+    #         ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f9f9f9')),
+    #         ('LEFTPADDING', (0, 1), (-1, -1), 6),
+    #         ('RIGHTPADDING', (0, 1), (-1, -1), 6),
+    #         ('TOPPADDING', (0, 1), (-1, -1), 6),
+    #         ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+    #         ('MINROWHEIGHT', (1, 0), (1, 0), 45),
+    #     ]))
+    # elements.append(row3)
+    # elements.append(Spacer(1, 10))  
+
+
+    # # Immediate Action box
+    # elements.append(Paragraph(f"<b>Immediate Action Taken by Observer / Reporter</b>", normal_style))
+    # elements.append(Spacer(1, 8))
+    # action_box = Table([
+    #     [Paragraph(submission.action_taken or "-", normal_style)]
+    # ], colWidths=[7 * inch])
+    # action_box.setStyle(TableStyle([
+    #     ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor('#999999')),
+    #     ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f9f9f9')),
+    #     ('LEFTPADDING', (0, 1), (-1, -1), 6),
+    #     ('RIGHTPADDING', (0, 1), (-1, -1), 6),
+    #     ('TOPPADDING', (0, 1), (-1, -1), 6),
+    #     ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+    #     ('MINROWHEIGHT', (0, 0), (-1, -1), 54),
+    # ]))
+    # elements.append(action_box)
+    # elements.append(Spacer(1, 10))  
+
+    # # Suggested Further Action box
+    # elements.append(Paragraph(f"<b>Suggested Further Action To Prevent Recurrence</b>", normal_style))
+    # elements.append(Spacer(1, 8))
+    # prevent_box = Table([
+    #     [Paragraph(submission.preventive_action or "-", normal_style)]
+    # ], colWidths=[7 * inch])
+    # prevent_box.setStyle(TableStyle([
+    #     ('BOX', (0, 0), (-1, -1), 0.75, colors.grey),
+    #     ('LEFTPADDING', (0, 0), (-1, -1), 6),
+    #     ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+    #     ('TOPPADDING', (0, 0), (-1, -1), 4),
+    #     ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    #     ('MINROWHEIGHT', (1, 0), (1, 0), 40),
+    # ]))
+    # elements.append(prevent_box)
+    # elements.append(Spacer(1, 40))
+
+    # Footer with left and right alignment
+    footer_table = Table(
+        [[
+            Paragraph(f"FCL-HSEQ-NIM-FM.{submission.id}", normal_style),
+            Paragraph(f"Rev.{submission.id}", normal_style)
+        ]],
+        colWidths=[None, None],  # allow auto-sizing
+    )
+    footer_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(Spacer(1, 20))
+    elements.append(footer_table)
+
+
+    # Footer line: Form Code and Revision
+    # footer_table = Table(
+    #     [[
+    #         Paragraph(f"FCL-HSEQ-NIM-FM.{submission.id}", normal_style),
+    #         Paragraph(f"Rev.{submission.id}", normal_style)
+    #     ]],
+    #     colWidths=[3.5 * inch, 3.5 * inch]
+    # )
+    # footer_table.setStyle(TableStyle([
+    #     ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+    #     ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+    # ]))
+    # elements.append(footer_table)
+
 
     # Build the PDF
     doc.build(elements)
@@ -1526,7 +1649,7 @@ def generate_ptw_pdf(submission):
         Paragraph(f"<b>Date Submitted:</b> {submission.date_submitted}", normal),
         Paragraph(f"<b>User:</b> {submission.user.get_full_name()}", normal),
         Paragraph(f"<b>Location:</b> {submission.location}", normal),
-        Paragraph(f"<b>Status:</b> {submission.status}", normal),
+        Paragraph(f"<b>Status:</b> {submission.get_status_display()}", normal),
         Spacer(1, 12),
     ]
 
@@ -1554,7 +1677,7 @@ def generate_ptw_pdf(submission):
         add_kv("Facility Manager Name", submission.facility_manager_name),
         add_kv("Facility Manager Date", submission.facility_manager_date),
         add_kv("Facility Manager Signature", submission.facility_manager_sign),
-        add_kv("Certificates Required", submission.certificates_required),
+        add_kv("Certificates Required", submission.get_certificates_required_display()),
         add_kv("Valid From", submission.valid_from),
         add_kv("Valid To", submission.valid_to),
         add_kv("Initials", submission.initials),

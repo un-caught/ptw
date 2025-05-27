@@ -18,7 +18,7 @@
                         {% for note in notifications %}
                             <li class="list-group-item {% if not note.is_read %}list-group-item-warning{% endif %} border-0 rounded-3 mb-3 shadow-sm">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <a href="{% url 'app:read_notification' note.id %}" class="text-decoration-none text-dark fw-bold">
+                                    <a href="{% url 'app:read_notification' note.id %}?section={{ section }}" class="text-decoration-none text-dark fw-bold">
                                         {{ note.message }}
                                     </a>
                                     <small class="text-muted ms-2">{{ note.timestamp|naturaltime }}</small>

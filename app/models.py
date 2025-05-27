@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import timedelta
+from django.utils import timezone
 
 # Create your models here.
 class Member(models.Model):
@@ -107,6 +109,19 @@ class PTWForm(models.Model):
     manager_date = models.DateField(null=True)
     manager_sign = models.CharField(max_length=255, null=True)
 
+    @property
+    def remark(self):
+        if self.start_datetime and self.days is not None:
+            try:
+                end_date = self.start_datetime + timedelta(days=self.days)
+                if end_date < timezone.now():
+                    return "Closed"
+                else:
+                    return "Open"
+            except Exception:
+                return "Invalid Date"
+        return "Incomplete Data"
+
 
     status = models.CharField(
         max_length=20,
@@ -136,53 +151,13 @@ class NHISForm(models.Model):
         ('LFZ_Ibeju', 'LFZ_Ibeju'),
     ], blank=True, null=True)
     date = models.DateField(null=True)
-    question = models.CharField(max_length=7, choices=[('option1', 'Option 1'), ('option2', 'Option 2')], null=True)
-   
-    # Section 2: Hazard Identification
-    hazard = models.ManyToManyField(Hazards, blank=True)
-    risk_type = models.CharField(max_length=255, choices=[
-        ('UA', 'UA (Unsafe Act)'),
-        ('UC', 'UC (Unsafe Condition)'),
-        ('NM', 'NM (Near Miss)'),
-        ('ACD', 'ACD (Accident)'),
-        ('NC', 'NC (Non-Conformity)'),
-    ], blank=True, null=True)
-    ram_rating = models.CharField(max_length=255, choices=[
-        ('High', 'High'),
-        ('Medium', 'Medium'),
-        ('Low', 'Low'),
-    ], blank=True, null=True)
-
-    # Section 3: Obeservation
-    observation = models.TextField(blank=True)
-
-     # Section 4: Immediate Action Taken
-    action_taken = models.TextField(blank=True)
-
-     # Section 5: Preventive Action
-    preventive_action = models.TextField(blank=True)
-
-    # Section 6: Responsible Party And Target
-    responsible_party = models.CharField(max_length=7, choices=[('HSEQ', 'HSEQ')], default='HSEQ', null=True)
-    target_date = models.DateField(null=True)
-
-    # Section 7: Observed By
     observed_by = models.CharField(max_length=255, null=True)
-    dept = models.CharField(max_length=255, choices=[
-        ('Admin', 'Admin'),
-        ('BDS', 'BDS'),
-        ('DC', 'DC'),
-        ('ER', 'ER'),
-        ('FVC', 'FVC'),
-        ('HR', 'HR'),
-        ('HSE', 'HSE'),
-        ('IAC', 'IAC'),
-        ('IT', 'IT'),
-        ('LRC', 'LRC'),
-        ('TS', 'TS'),
-    ], blank=True, null=True)
-    observed_date = models.DateField(null=True)
-    
+    other_location = models.CharField(max_length=255, null=True)
+    activity = models.CharField(max_length=255, null=True)
+    observation = models.TextField(blank=True)
+    hazard = models.ManyToManyField(Hazards, blank=True)
+    action_taken = models.TextField(blank=True)
+    preventive_action = models.TextField(blank=True)   
     status = models.CharField(
         max_length=20,
         choices=[

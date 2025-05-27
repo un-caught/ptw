@@ -2,6 +2,7 @@
 {% block title %}Supervisor Dashboard{% endblock title %}
 
 {% block content %}
+{% if section == 'ptw' %}
 <div class="row pt-3">
     <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
         <div class="card" style="background: linear-gradient(to right, #4e73df, #1e3c72); color: white;">
@@ -36,6 +37,10 @@
         </div>
     </div>
 </div>
+<div data-aos="fade-up" data-aos-delay="400">
+    <img src="data:image/png;base64,{{ combined_chart }}" alt="Combined Chart" style="max-width: 100%; height: auto;">
+</div>
+{% elif section == 'nhir' %}
 <div class="row pt-3">
     <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
         <div class="card" style="background: linear-gradient(to right,rgb(42, 144, 160),rgb(8, 70, 80)); color: white;">
@@ -70,9 +75,13 @@
         </div>
     </div>
 </div>
-
 <div data-aos="fade-up" data-aos-delay="400">
     <img src="data:image/png;base64,{{ combined_chart }}" alt="Combined Chart" style="max-width: 100%; height: auto;">
 </div>
+{% else %}
+<div class="alert alert-info mt-4">
+    Please choose NHIR or PTW section to view data.
+  </div>
+{% endif %}
 
 {% endblock content %}

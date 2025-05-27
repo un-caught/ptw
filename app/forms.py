@@ -9,7 +9,7 @@ from django.forms.widgets import ClearableFileInput
 
 class CreateUserForm(UserCreationForm):
     group_choices = forms.ChoiceField(
-        choices=[('staff', 'Staff'), ('vendor', 'Vendor Supervisor')],
+        choices=[('staff', 'Staff'), ('vendor', 'HSEQ Personnel')],
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     class Meta:
@@ -120,8 +120,8 @@ class PTWSubmissionForm(forms.ModelForm):
 class NHISSubmissionForm(forms.ModelForm):
     class Meta:
         model = NHISForm
-        fields = ['location', 'date', 'hazard', 'risk_type', 'ram_rating', 'observation', 
-        'action_taken', 'preventive_action', 'responsible_party', 'target_date', 'observed_by', 'dept', 'observed_date']
+        fields = ['location', 'date', 'hazard', 'other_location', 'observation', 
+        'action_taken', 'preventive_action',  'observed_by', 'activity']
 
     
 
@@ -141,44 +141,16 @@ class NHISSubmissionForm(forms.ModelForm):
         required=False  # Make it optional to select any option
     )
 
-    risk_type = forms.ChoiceField(choices=[('UA', 'UA (Unsafe Act)'),
-        ('UC', 'UC (Unsafe Condition)'),
-        ('NM', 'NM (Near Miss)'),
-        ('ACD', 'ACD (Accident)'),
-        ('NC', 'NC (Non Conformity)'),
-        ], widget=forms.Select(attrs={'class': 'form-select'}))
-
-    ram_rating = forms.ChoiceField(choices=[('High', 'High'),
-        ('Medium', 'Medium'),
-        ('Low', 'Low'),
-        ], widget=forms.Select(attrs={'class': 'form-select'}))
-
     #Observations
-    observation = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), required=False)
+    observation = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
 
     #Immediate Action Taken
-    action_taken = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), required=False)
+    action_taken = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
 
     #Preventive Actions
-    preventive_action = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}), required=False)
-
-    #Responsible Party And Target
-    responsible_party = forms.ChoiceField(choices=[('HSEQ', 'HSEQ'),], widget=forms.RadioSelect(attrs={'class': 'form-check-input'}), required=True,)
-    target_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
+    preventive_action = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}))
 
     #Observed By
     observed_by = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    dept = forms.ChoiceField(choices=[
-        ('Admin', 'Admin'),
-        ('BDS', 'BDS'),
-        ('DC', 'DC'),
-        ('ER', 'ER'),
-        ('FVC', 'FVC'),
-        ('HR', 'HR'),
-        ('HSE', 'HSE'),
-        ('IAC', 'IAC'),
-        ('IT', 'IT'),
-        ('LRC', 'LRC'),
-        ('TS', 'TS'),
-    ], widget=forms.Select(attrs={'class': 'form-select'}))
-    observed_date = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
+    other_location = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}), required=False)
+    activity = forms.CharField(max_length=255, widget=forms.TextInput(attrs={'class': 'form-control'}))

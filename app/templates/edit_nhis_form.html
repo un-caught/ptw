@@ -5,79 +5,44 @@
 <div class="container-fluid">
     <h2 class="my-4" data-aos="fade-up">Edit Form Submission</h2>
     <form method="post">
+        <input type="hidden" name="section" value="{{ section }}">
         {% csrf_token %}
-        <h3>Section 1: General Information</h3>
         <div class="mb-3">
-            <label for="location" class="form-label">1. Exact Location</label>
-            {{ form.location }}
-        </div>
-        <div class="mb-3">
-            <label for="Date" class="form-label">2. Date/Time</label>
+            <label for="Date" class="form-label">1. Date/Time</label>
             {{ form.date }}
         </div>
-
-        <h3>Section 2: Hazard Identification</h3>
         <div class="mb-3">
-            <label class="form-label">3. Tick As Appropriate</label>
-            {{ form.hazard }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">4. Risk Type</label>
-            {{ form.risk_type }}
-        </div>
-        <div class="mb-3">
-            <label class="form-label">5. RAM Rating</label>
-            {{ form.ram_rating }}
-        </div>
-
-
-        <h3>Section 3: Observations</h3>
-        <div class="mb-3">
-            <label class="form-label">6. Description Of Observations</label>
-            {{ form.observation }}
-        </div>
-        
-
-        <h3>Section 4: Immediate Action Taken</h3>
-        <div class="mb-3">
-            <label class="form-label">7. Immediate Action Taken</label>
-            {{ form.action_taken }}
-        </div>
-        
- 
-        <h3>Section 5: Preventive Action</h3>
-        <div class="mb-3">
-            <label class="form-label">8. Futher Action To Prevent Reccurence</label>
-            {{ form.preventive_action }}
-        </div>
-       
-
-         <h3>Section 6: Responsible Party And Target</h3>
-         <div class="mb-3">
-            <label for="ResponsibleParty" class="form-label">9. Responsible Action Party</label>
-            <label class="form-check ms-4">
-                {{ form.responsible_party }}
-                <span class="form-check-label">{{ form.responsible_party.choice_label }}</span>
-            </label>
-        </div>
-        <div class="mb-3">
-            <label for="TargetDate" class="form-label">10. Target Date/Time</label>
-            {{ form.target_date }}
-        </div>
-
-
-         <h3>Section 7: Observed By</h3>
-         <div class="mb-3">
-            <label for="ObservedBy" class="form-label">11. Observed By</label>
+            <label for="ObservedBy" class="form-label">2. Observer / Reporter </label>
             {{ form.observed_by }}
         </div>
         <div class="mb-3">
-            <label for="Dept" class="form-label">12. Dept</label>
-            {{ form.dept }}
+            <label for="location" class="form-label">3. Location</label>
+            {{ form.location }}
         </div>
         <div class="mb-3">
-            <label for="ObservedDate" class="form-label">13. Date/Time</label>
-            {{ form.observed_date }}
+            <label class="form-label">4. If other location please specify </label>
+            {{ form.other_location }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">5. Activity </label>
+            {{ form.activity }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">6. Nonconformity, Potential or Actual Incident (NPAI) Description</label>
+            {{ form.observation }}
+        </div>
+        <h3>Category Of Observation</h3>
+        <div class="mb-3">
+            <label class="form-label">7. Tick As Appropriate</label>
+            {{ form.hazard }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">8. Immediate Action Taken by Observer / Reporter</label>
+            {{ form.action_taken }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">9. Suggested Futher Action</label>
+            {{ form.preventive_action }}
         </div>
         <button type="submit">Save Changes</button>
     </form>

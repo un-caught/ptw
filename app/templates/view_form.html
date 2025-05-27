@@ -14,7 +14,7 @@
         <h5><strong>Date Submitted:</strong> {{ submission.date_submitted }}</h5>
         <h5><strong>User:</strong> {{ submission.user.get_full_name }}</h5>
         <h5><strong>Location:</strong> {{ submission.location }}</h5>
-        <h5><strong>Status:</strong> {{ submission.status }}</h5>
+        <h5><strong>Status:</strong> {{ submission.get_status_display }}</h5>
         <br><br>
 
         <h4><strong>Details:</strong></h4>
@@ -39,7 +39,7 @@
                             {% if attachment_ext == '.jpg' or attachment_ext == '.png' or attachment_ext == '.gif' %}
                                 <img src="{{ submission.attachment.url }}" alt="Risk Attachment" width="200">
                             {% else %}
-                                <a href="{{ submission.attachment.url }}" target="_blank">Download Attachment</a>
+                                <a href="{{ submission.attachment.url }}?section={{ section }}" target="_blank">Download Attachment</a>
                             {% endif %}
                         {% else %}
                             No attachment
@@ -157,7 +157,7 @@
                             {% if project_attachment_ext == '.jpg' or project_attachment_ext == '.png' or project_attachment_ext == '.gif' %}
                                 <img src="{{ submission.project_attachment.url }}" alt="Project Attachment" width="200">
                             {% else %}
-                                <a href="{{ submission.project_attachment.url }}" target="_blank">Download Attachment</a>
+                                <a href="{{ submission.project_attachment.url }}?section={{ section }}" target="_blank">Download Attachment</a>
                             {% endif %}
                         {% else %}
                             No attachment
@@ -205,10 +205,11 @@
 
         <div class="mt-4 d-flex gap-2">
             <form method="post" class="mb-0">
+                <input type="hidden" name="section" value="{{ section }}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-primary mb-4">Download as PDF</button>
             </form>
-            <a href="{% url 'app:form_list' %}" class="btn btn-secondary mb-4">Back to Report</a>
+            <a href="{% url 'app:form_list' %}?section={{ section }}" class="btn btn-secondary mb-4">Back to Report</a>
         </div>
     </div>
 </div>

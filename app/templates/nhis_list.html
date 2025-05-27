@@ -4,13 +4,14 @@
 {% block content %}
 <div class="container shadow-sm bg-white mt-6" style="border-radius: 0.375rem;">
     <div class="card-body">
-        <h1 class="text-center mb-4 mt-2">Hazard Identificaions Forms (NHIR) Forms</h1>
+        <h1 class="text-center mb-4 mt-2">Nonconformity,Hazard Incident Record(NHIR) Forms</h1>
         {% if is_staff %}
-        <a href="{% url 'app:create_nhis' %}" class="btn btn-primary mb-3" >Create New NHIR Form</a>
+        <a href="{% url 'app:create_nhis' %}?section={{ section }}" class="btn btn-primary mb-3" >Create New NHIR Form</a>
         {% endif %}
 
         <div class="container mt-2 mb-4">
             <form method="get" class="row g-3 align-items-end shadow-sm p-4  rounded border">
+                <input type="hidden" name="section" value="{{ section }}">
                 <div class="col-md-4">
                     <label for="start_date" class="form-label fw-bold">Start Date</label>
                     <input type="date" id="start_date" name="start_date" class="form-control"
@@ -79,14 +80,15 @@
                                     <a href="#" class="btn btn-sm btn-secondary mb-1">Print</a>
                                     <br>
                                 {% elif submission.status == 'awaiting_supervisor' %}
-                                    <a href="{% url 'app:edit_nhis_form' submission.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                                    <a href="{% url 'app:edit_nhis_form' submission.pk %}?section={{ section }}" class="btn btn-sm btn-secondary">Edit</a>
                                 {% endif %}
                                 <form action="{% url 'app:delete_nhis_form' submission.pk %}" method="post" style="display: inline;" class="pb-2">
+                                    <input type="hidden" name="section" value="{{ section }}">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                 </form>
                             {% elif is_supervisor or is_manager %}
-                                <a href="{% url 'app:view_nhis_form' submission.pk %}" class="btn btn-sm btn-info">View</a>
+                                <a href="{% url 'app:view_nhis_form' submission.pk %}?section={{ section }}" class="btn btn-sm btn-info">View</a>
                             {% endif %}
                         </td>
 
@@ -94,13 +96,13 @@
                         <td>
                             {% if is_supervisor %}
                                 {% if submission.status == 'awaiting_supervisor' %}
-                                <a href="{% url 'app:approve_nhis_supervisor' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve</a>
-                                <a href="{% url 'app:disapprove_nhis_supervisor' submission.pk %}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
+                                <a href="{% url 'app:approve_nhis_supervisor' submission.pk %}?section={{ section }}" class="btn btn-sm btn-primary mb-1">Approve</a>
+                                <a href="{% url 'app:disapprove_nhis_supervisor' submission.pk %}?section={{ section }}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
                                 {% endif %}
                             {% elif is_manager %}
                                 {% if submission.status == 'awaiting_manager' %}
-                                <a href="{% url 'app:approve_nhis_manager' submission.pk %}" class="btn btn-sm btn-primary mb-1">Approve</a>
-                                <a href="{% url 'app:disapprove_nhis_manager' submission.pk %}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
+                                <a href="{% url 'app:approve_nhis_manager' submission.pk %}?section={{ section }}" class="btn btn-sm btn-primary mb-1">Approve</a>
+                                <a href="{% url 'app:disapprove_nhis_manager' submission.pk %}?section={{ section }}" class="btn btn-sm btn-danger mb-1">Disapprove</a>
                                 {% endif %}
                             {% comment %} {% else %}
                                 {% if submission.status == 'open' %}

@@ -24,6 +24,10 @@
         .status.awaiting_supervisor {
             color: orange;
         }
+        canvas {
+            max-width: 100%;
+            height: auto !important;
+        }
     </style>
 </head>
 
@@ -37,13 +41,22 @@
                 <!-- Filters -->
                 <div class="filters mb-4">
                     <form method="get" class="row g-3" action="{% url 'app:form_report' %}">
-                        <div class="col-md-6">
+                        <input type="hidden" name="section" value="{{ section }}">
+                        <div class="col-md-4">
                             <label for="startDate" class="form-label">Start Date:</label>
                             <input type="date" name="startDate" class="form-control" value="{{ start_date }}">
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="endDate" class="form-label">End Date:</label>
                             <input type="date" name="endDate" class="form-control" value="{{ end_date }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="form_type" class="form-label">Form Type:</label>
+                            <select name="form_type" class="form-select">
+                                <option value="">-- All Forms --</option>
+                                <option value="NHIS" {% if form_type_filter == "NHIS" %}selected{% endif %}>NHIR</option>
+                                <option value="PTW" {% if form_type_filter == "PTW" %}selected{% endif %}>PTW</option>
+                            </select>
                         </div>
                         <div class="col-md-12 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary w-100 m-2">Generate Report</button>
@@ -56,11 +69,15 @@
 
                 {% if report_data %}
                     <div class="mb-4">
-                        <h4>Total NHIR Forms Submitted: <span class="badge bg-info">{{ total_nhis }}</span></h4>
-                        <h4>Total PTW Forms Submitted: <span class="badge bg-info">{{ total_ptw }}</span></h4>
+                        {% if form_type_filter == "NHIS" %}
+                            <h4>Total NHIS Forms Submitted: <span class="badge bg-info">{{ total_nhis }}</span></h4>
+                        {% elif form_type_filter == "PTW" %}
+                            <h4>Total PTW Forms Submitted: <span class="badge bg-info">{{ total_ptw }}</span></h4>
+                        {% else %}
+                            <h4>Total NHIS Forms Submitted: <span class="badge bg-info">{{ total_nhis }}</span></h4>
+                            <h4>Total PTW Forms Submitted: <span class="badge bg-info">{{ total_ptw }}</span></h4>
+                        {% endif %}
                     </div>
-
-                    
 
                     <!-- Table -->
                     <table class="table  table-bordered mb-5">
@@ -86,89 +103,92 @@
                                 </tr>
                             {% endfor %}
                         </tbody>
-                        
-                        {% comment %} <a href="?startDate={report_data['start_date']}&endDate={report_data['end_date']}&export=true" class="btn btn-success">Export to Excel</a>
-                        <div class="download-btn">
-                            <a href="?startDate={{ start_date }}&endDate={{ end_date }}&download_pdf=true">Download Report as PDF</a>
-                        </div> {% endcomment %}
                     </table>
-
-
-                    <div class="container shadow-sm" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px;">
-
-                        <!-- Form Type Distribution -->
-                        <div style="width: 40%; height: 40%;">
-                            <h3>Form Type Distribution</h3>
-                            <canvas id="pieChart" style="width: 100%; height: 200px;"></canvas> 
-                            <script>
-                                var ctx = document.getElementById('pieChart').getContext('2d');
-                                var pieChart = new Chart(ctx, {
-                                    type: 'pie',
-                                    data: {
-                                        labels: ['NHIR', 'PTW'],
-                                        datasets: [{
-                                            data: [{{ pie_chart_data_form_type.NHIS }}, {{ pie_chart_data_form_type.PTW }}],
-                                            backgroundColor: ['#36A2EB', '#FFCE56'],
-                                        }]
-                                    },
-                                });
-                            </script>
-                        </div>
                     
-                        <!-- PTW Status Distribution -->
-                        <div style="width: 40%; height: 40%;">
-                            <h3>Completed PTW Forms Status</h3>
-                            <canvas id="statusPieChart" style="width: 100%; height: 200px;"></canvas>
-                            <script>
-                                var ctx = document.getElementById('statusPieChart').getContext('2d');
-                                var statusPieChart = new Chart(ctx, {
-                                    type: 'pie',
-                                    data: {
-                                        labels: ['Approved', 'Disapproved'],
-                                        datasets: [{
-                                            data: [{{ pie_chart_data_status.approved }}, {{ pie_chart_data_status.disapproved }}],
-                                            backgroundColor: ['#4CAF50', '#d7290a'],
-                                        }]
-                                    },
-                                });
-                            </script>
-                        </div>
-                        <div style="width: 40%; height: 40%;">
-                                <h3>Completed NHIR Forms Status</h3>
-                                <canvas id="nhisPieChart" style="width: 100%; height: 200px;"></canvas>
+                    <div class="container shadow-sm" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+                        <!-- NHIS Completed Forms -->
+                        {% if nhis_completed_counts.closed or nhis_completed_counts.denied %}
+                            <div style="width: 45%; height: 300px;">
+                                <h3>NHIS Completed Forms</h3>
+                                <canvas id="nhisCompletedChart"></canvas>
                                 <script>
-                                    var ctx = document.getElementById('nhisPieChart').getContext('2d');
-                                    var statusPieChart = new Chart(ctx, {
+                                    var ctx = document.getElementById('nhisCompletedChart').getContext('2d');
+                                    new Chart(ctx, {
                                         type: 'pie',
                                         data: {
                                             labels: ['Closed', 'Denied'],
                                             datasets: [{
-                                                data: [ {{ pie_chart_data_status.closed }}, {{ pie_chart_data_status.denied }}],
+                                                data: [{{ nhis_completed_counts.closed }}, {{ nhis_completed_counts.denied }}],
                                                 backgroundColor: ['#4CAF50', '#d7290a'],
                                             }]
                                         },
                                     });
                                 </script>
-                        </div>
-                        <div style="width: 40%; height: 40%;">
-                            <h3>Pending Forms</h3>
-                            <canvas id="pendingPieChart" style="width: 100%; height: 200px;"></canvas>
-                            <script>
-                                var ctx = document.getElementById('pendingPieChart').getContext('2d');
-                                var statusPieChart = new Chart(ctx, {
-                                    type: 'pie',
-                                    data: {
-                                        labels: ['Awaiting Manager', 'Awaiting Supervisor'],
-                                        datasets: [{
-                                            data: [{{ pie_chart_data_status.awaiting_manager }}, {{ pie_chart_data_status.awaiting_supervisor }}],
-                                            backgroundColor: ['#f48d0c', '#331f07'],
-                                        }]
-                                    },
-                                });
-                            </script>
-                        </div>
-                    </div>
-                    
+                            </div>
+                            {% endif %}
+
+                        <!-- NHIS Pending Forms -->
+                        {% if nhis_pending_counts.awaiting_supervisor %}
+                            <div style="width: 45%; height: 300px;">
+                                <h3>NHIS Pending Forms</h3>
+                                <canvas id="nhisPendingChart"></canvas>
+                                <script>
+                                    var ctx = document.getElementById('nhisPendingChart').getContext('2d');
+                                    new Chart(ctx, {
+                                        type: 'pie',
+                                        data: {
+                                            labels: ['Awaiting Supervisor'],
+                                            datasets: [{
+                                                data: [{{ nhis_pending_counts.awaiting_supervisor }}],
+                                                backgroundColor: ['#f48d0c'],
+                                            }]
+                                       },
+                                    });
+                                </script>
+                            </div>
+                            {% endif %}
+
+                        <!-- PTW Completed Forms -->
+                        {% if ptw_completed_counts.approved or ptw_completed_counts.disapproved %}
+                            <div style="width: 45%; height: 300px;">
+                                <h3>PTW Completed Forms</h3>
+                                <canvas id="ptwCompletedChart"></canvas>
+                                <script>
+                                    var ctx = document.getElementById('ptwCompletedChart').getContext('2d');
+                                    new Chart(ctx, {
+                                        type: 'pie',
+                                        data: {
+                                            labels: ['Approved', 'Disapproved'],
+                                            datasets: [{
+                                                data: [{{ ptw_completed_counts.approved }}, {{ ptw_completed_counts.disapproved }}],
+                                                backgroundColor: ['#4CAF50', '#d7290a'],
+                                            }]
+                                        },
+                                    });
+                                </script>
+                            </div>
+                            {% endif %}
+                        <!-- PTW Pending Forms -->
+                        {% if ptw_pending_counts.awaiting_manager or ptw_pending_counts.awaiting_supervisor %}
+                            <div style="width: 45%; height: 300px;">
+                                <h3>PTW Pending Forms</h3>
+                                <canvas id="ptwPendingChart"></canvas>
+                                <script>
+                                    var ctx = document.getElementById('ptwPendingChart').getContext('2d');
+                                    new Chart(ctx, {
+                                     type: 'pie',
+                                        data: {
+                                            labels: ['Awaiting Manager', 'Awaiting Supervisor'],
+                                            datasets: [{
+                                                data: [{{ ptw_pending_counts.awaiting_manager }}, {{ ptw_pending_counts.awaiting_supervisor }}],
+                                                backgroundColor: ['#f48d0c', '#331f07'],
+                                            }]
+                                        },
+                                    });
+                                </script>
+                            </div>
+                            {% endif %}
+
                     </div>
                     
                 {% else %}

@@ -48,6 +48,8 @@ def user_groups(request):
         is_staff = request.user.groups.filter(name="staff").exists()
         is_vendor = request.user.groups.filter(name="vendor").exists()
         is_admin = request.user.groups.filter(name="admin").exists()
+        is_hr = request.user.groups.filter(name="hr").exists()
+        is_em = request.user.groups.filter(name="em").exists()
 
         unread_count = Notification.objects.filter(recipient=request.user, is_read=False).count()
     else:
@@ -61,6 +63,8 @@ def user_groups(request):
         is_supervisor = False
         is_manager = False
         is_admin = False
+        is_hr = False
+        is_em = False
         total_ptw = 0
         total_nhis = 0
         approved_ptw = 0
@@ -92,6 +96,8 @@ def user_groups(request):
         'is_supervisor': is_supervisor,
         'is_manager': is_manager,
         'is_admin': is_admin,
+        'is_hr': is_hr,
+        'is_em': is_em,
         'approved_count': approved_count,
         'pend_count': pend_count,
         'open_count': open_count,
@@ -114,5 +120,6 @@ def user_groups(request):
         'admin_tickets': admin_tickets,
         'admin_tickets_progress': admin_tickets_progress,
         'admin_tickets_closed': admin_tickets_closed,
-        'admin_tickets_cbc': admin_tickets_cbc
+        'admin_tickets_cbc': admin_tickets_cbc,
+        'section': request.GET.get('section')
     }
