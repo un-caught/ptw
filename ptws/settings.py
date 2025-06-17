@@ -165,4 +165,4 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = 'DoNotReply <donotreplythismail34@gmail.com>'
 EMAIL_HOST_USER = 'donotreplythismail34@gmail.com'
-EMAIL_HOST_PASSWORD = 'dslw uasc tmba vwuz'
+EMAIL_HOST_PASSWORD = os.environ.get('email_password')
