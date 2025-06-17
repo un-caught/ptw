@@ -33,7 +33,7 @@
     }
     .logo {
       position: absolute;
-      top: 70px;
+      top: 50px;
       left: 50%;
       transform: translateX(-50%);
     }
@@ -132,7 +132,7 @@
           Internet Guest Access
         </a>
       </div> {% endcomment %}
-      {% comment %} <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a href="{% url 'leave:home' %}" class="link-box" style="background: linear-gradient(45deg, #af5ec5,rgb(211, 147, 236)); 
                                   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                   position: relative; font-size: 20px;">
@@ -140,14 +140,14 @@
           <b>Leave Management System</b>
         </a>
       </div>
-      <div class="col-4 mb-3">
+      <div class="col-6 mb-3">
         <a href="{% url 'helpdesk:home' %}" class="link-box" style="background: linear-gradient(45deg, #ff6600,rgb(229, 169, 138)); 
                                                                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
                                                                      position: relative; font-size: 30px;">
           <span style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));"></span>
           <b>Help Desk </b>
         </a>
-      </div> {% endcomment %}
+      </div> 
       {% if is_staff %}
       <div class="col-6 mb-3">
         <a href="{% url 'app:client' %}" class="link-box" style="background: linear-gradient(45deg, #E83F25, #f0715d); 
